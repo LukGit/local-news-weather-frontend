@@ -36,7 +36,8 @@ class Login extends Component {
             centerGPS = {lat: location.results[0].geometry.location.lat, lng: location.results[0].geometry.location.lng}
             const newUser = {...user, gps: centerGPS}
             this.props.currentUser(newUser)
-            this.getReports(user.jwt)
+            this.props.history.push('/report')
+            // this.getReports(user.jwt)
           })
         }
       })
@@ -72,7 +73,8 @@ class Login extends Component {
             centerGPS = {lat: location.results[0].geometry.location.lat, lng: location.results[0].geometry.location.lng}
             const newUser = {...userData, gps: centerGPS}
             this.props.addUser(newUser)
-            this.getReports(userData.jwt)
+            this.props.history.push('/report')
+            // this.getReports(userData.jwt)
           })
       }
     })
@@ -97,8 +99,8 @@ class Login extends Component {
     return (
       <div className="login">
       <Header className="pageTitle" as="h1" size="huge" icon inverted>
-        <Icon name="paw"/>
-        Welcome To The Dog Poop Tracker
+        <Icon name="lightning"/>
+        Welcome To The Earthquake Tracker
       </Header>
         <Form onSubmit={this.loginUser}>
         <Form.Group widths='equal' inline >
@@ -112,4 +114,4 @@ class Login extends Component {
   }
 }
 
-export default connect(null, {addUser, currentUser, addReport})(Login)
+export default connect(null, {addUser, currentUser })(Login)

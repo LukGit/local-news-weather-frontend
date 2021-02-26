@@ -2,6 +2,9 @@ import logo from './logo.svg';
 import './App.css';
 import { BrowserRouter } from 'react-router-dom'
 import { Route, Switch } from 'react-router-dom'
+import Login from './components/Login'
+import Signup from './components/Signup'
+import Reports from './components/Reports'
 
 const App = () => {
   return (
@@ -10,8 +13,7 @@ const App = () => {
       <Switch>
         <Route path={'/login'} component={Login} />
         <Route path={'/signup'} component={Signup}/>
-        <Route path={'/weather'} component={Weather} />
-        <Route path={'/news'} component={News} />
+        <Route path={'/report'} component={Reports} />
         <Route path={'/'} component={Login} />
       </Switch>
       </BrowserRouter>
