@@ -4,6 +4,7 @@ import Navbar from './Navbar';
 import MapReports from './MapReports'
 import { addReport } from '../actions'
 import { Label, Icon, Menu, Dropdown, Checkbox, Modal, Button, Header, Item, Divider } from 'semantic-ui-react'
+import { useRouteMatch } from 'react-router-dom';
 
 class Reports extends Component {
   state = {
@@ -170,22 +171,34 @@ class Reports extends Component {
             </Button.Content>
           </Button></Menu.Item>} closeIcon>
           <Modal.Content>
-            <Header size='small'>Your Neighborhood Weather and Forecast</Header>
-            <Header size='tiny'>Current Condition</Header>
+            <Item.Group>
+              <Item>
+              <Item.Content>
+                <Item.Header>Your Neighborhood Weather and Forecast</Item.Header>
+              </Item.Content>
+              </Item>
             <Item>
-              <Item.Image src={this.state.weatherIcon} size="tiny" />
+              <Item.Content>
+                <Item.Header>Current Condition</Item.Header>
+                <Item.Image src={this.state.weatherIcon} size="tiny" /> 
+                <Item.Content>{this.state.weather}</Item.Content> 
+              </Item.Content>
             </Item>
-            <Label>{this.state.weather}</Label> 
-            <Header size='tiny'>Tomorrow's Forecast</Header>
             <Item>
-              <Item.Image src={this.state.forecastIcon} size="tiny" />
+              <Item.Content>
+                <Item.Header>Tomorrow's Forecast</Item.Header>
+                <Item.Image src={this.state.forecastIcon} size="tiny" /> 
+                <Item.Content>{this.state.forecast}</Item.Content> 
+              </Item.Content>
             </Item>
-            <Label>{this.state.forecast}</Label>
-            <Divider horizontal hidden ></Divider>
-            <Header size='small'>Hourly Forecast</Header>
-            <Label>{this.state.hourLine1}</Label>
-            <Divider horizontal hidden ></Divider>
-            <Label>{this.state.hourLine2}</Label>
+            <Item>
+              <Item.Content>
+                <Item.Header>Hourly Forecast</Item.Header> 
+                <Item.Content>{this.state.hourLine1}</Item.Content> 
+                <Item.Content>{this.state.hourLine2}</Item.Content>
+              </Item.Content>
+            </Item>
+            </Item.Group>
           </Modal.Content>
         </Modal>
 

@@ -109,7 +109,7 @@ export class MapReports extends Component {
                 </Item> 
               <Item>
                 <Item.Content>
-                <Item.Description as='a' content='Click to see event detail' href={this.state.quakeLink}></Item.Description>
+                <Item.Description as='a' content='Click to see event detail' href={this.state.quakeLink} target="_blank"></Item.Description>
                   </Item.Content>
                 </Item>
               </Item.Group>

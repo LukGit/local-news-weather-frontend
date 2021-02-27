@@ -8,7 +8,7 @@ The app's frontend is built in JavaScript with React/Redux framework. The backen
 
 ## General operation
 
-Once logged in, users are greeted with a local map showing markers respresenting the earthquake locations around the world. Map is automatically centered based on the registered zipcode of the user. A pop-up info window is displayed with detail quake information when a map marker is clicked on. User can check local weather condition and forecast by clicking the weather button.
+Once logged in, users are greeted with a local map showing markers respresenting the earthquake locations around the world. Map is automatically centered based on the registered zipcode of the user. A pop-up info window is displayed with detail quake information when a map marker is clicked on. The detail pop-up also contain a link to the USGS detail page. Clicking on the link will open a new tab to the event page. User can check local weather condition and forecast by clicking the weather button.
 
 
 ## Technical Notes
