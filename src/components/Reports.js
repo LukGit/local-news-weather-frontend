@@ -11,12 +11,6 @@ class Reports extends Component {
     filterReports: [],
     largeOnly: false,
     sizeFilter: "All",
-    poopSize: [
-      {key: 1, text: "Small", value: "S"},
-      {key: 2, text: "Medium", value: "M"},
-      {key: 3, text: "Large", value: "L"},
-      {key: 4, text: "All", value: "All"}
-    ],
     weather: "",
     weatherIcon: "",
     forecast: "",
@@ -37,7 +31,8 @@ class Reports extends Component {
     m = date.getMonth() + 1;
     y = date.getFullYear();
     const dateString1 =  y + '-' + (m <= 9 ? '0' + m : m) + '-' + (d <= 9 ? '0' + d : d)
-    const Q_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake&minmagnitude=4&starttime" + dateString1 + "&&endtime=" + dateString
+    const Q_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=" + dateString1 + "&&endtime=" + dateString + "&eventtype=earthquake&minmagnitude=4"
+    console.log("quake url", Q_URL)
     fetch(Q_URL)
     .then(resp => resp.json())
     .then(quakeResp => {
@@ -139,7 +134,7 @@ class Reports extends Component {
         <Label size='large' color='grey'> 
         <Icon name='hand point down'/>
         {this.props.user.user}, 
-        {this.props.reports.length > 0 ? " Here Are The Eqrthquakes in the last 24hrs" : "No Earthquake In Last 24hrs!"}
+        {this.props.reports.length > 0 ? " Here are the significant eqrthquakes in the last 24hrs" : "No Earthquake In Last 24hrs!"}
         </Label> 
         </Menu.Item>
         {this.props.reports.length > 0 ?

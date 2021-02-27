@@ -25,6 +25,7 @@ class Login extends Component {
       fetch('http://localhost:3000/current_user', reqObj)
       .then(resp => resp.json())
       .then(user => {
+        console.log("current user", user)
         if (user.error) {
           this.props.history.push('/login')
         } else {
