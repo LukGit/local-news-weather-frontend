@@ -1,5 +1,5 @@
 # The Earthqake Tracker
-![alt text](https://github.com/LukGit/frontend-poop-tracker/blob/master/src/img/Poop-track-screen.png?raw=true)
+![alt text](https://user-images.githubusercontent.com/60716393/109378150-c83f8b80-7895-11eb-823c-6343e76505e4.png)
 This is an app for users to have a quick glance of significant earthqakes around the globe witin the past 24hrs, accroding to data from US Geological Survey (USGS). A map displays icons of varrious sizes representing quakes of various magnitudes. Only quakes with magnitude over 4 are displayed. When user clicks on the quake marker, it will show the detail information of the quake.
 
 ## Technical information
