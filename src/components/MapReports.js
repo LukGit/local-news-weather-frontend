@@ -4,7 +4,7 @@ import quakeS from '../img/quake24.png'
 import quakeM from '../img/quake36.png'
 import quakeL from '../img/quake48.png'
 import { withRouter } from 'react-router-dom'
-import { Header, Label, Divider } from 'semantic-ui-react'
+import { Header, Label, Divider, Item } from 'semantic-ui-react'
 
 
 export class MapReports extends Component {
@@ -18,7 +18,8 @@ export class MapReports extends Component {
     quakePl: "",
     quakeMag: "",
     quakeDate: "",
-    quakeAlert: ""
+    quakeAlert: "",
+    quakeLink:""
   }
   
   componentDidMount () {
@@ -42,6 +43,7 @@ export class MapReports extends Component {
         qMarker: marker,
         quakeDate: quakeResp.properties.products.origin[0].properties.eventtime,
         quakeAlert: quakeResp.properties.alert,
+        quakeLink: quakeResp.properties.url,
         showInfo: true
       })
     })
@@ -80,15 +82,38 @@ export class MapReports extends Component {
           marker={this.state.qMarker}
           visible={this.state.showInfo}
           >
-            <Header size='small'>Earthquake Detail</Header>
-            <Header size='tiny'>{this.state.quakePl}</Header>
-            <Divider horizontal hidden ></Divider>
-            <Label>Date: {this.state.quakeDate}</Label>
-            <Divider horizontal hidden ></Divider>
-            <Label>Magnitude: {this.state.quakeMag}</Label>
-            <Divider horizontal hidden ></Divider>
-            <Label>Alert: {this.state.quakeAlert === null ? "none" : this.state.quakeAlert}</Label>
-            </InfoWindow>
+            <Item.Group>
+              <Item>
+                <Item.Content>
+                <Item.Header>Origin Location</Item.Header>
+                <Item.Description>{this.state.quakePl}</Item.Description>
+                  </Item.Content>
+                </Item>
+              <Item>
+                <Item.Content>
+                <Item.Header>Date</Item.Header>
+                <Item.Description>{this.state.quakeDate}</Item.Description>
+                  </Item.Content>
+                </Item>  
+              <Item>
+                <Item.Content>
+                <Item.Header>Magnitude</Item.Header>
+                <Item.Description>{this.state.quakeMag}</Item.Description>
+                  </Item.Content>
+                </Item>  
+              <Item>
+                <Item.Content>
+                <Item.Header>Alert</Item.Header>
+                <Item.Description>{this.state.quakeAlert === null ? "none" : this.state.quakeAlert}</Item.Description>
+                  </Item.Content>
+                </Item> 
+              <Item>
+                <Item.Content>
+                <Item.Description as='a' content='Click to see event detail' href={this.state.quakeLink}></Item.Description>
+                  </Item.Content>
+                </Item>
+              </Item.Group>
+          </InfoWindow>
       </Map>
     );
   }
