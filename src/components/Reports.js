@@ -3,8 +3,7 @@ import { connect } from 'react-redux';
 import Navbar from './Navbar';
 import MapReports from './MapReports'
 import { addReport } from '../actions'
-import { Label, Icon, Menu, Dropdown, Checkbox, Modal, Button, Header, Item, Divider } from 'semantic-ui-react'
-import { useRouteMatch } from 'react-router-dom';
+import { Label, Icon, Menu, Checkbox, Modal, Button, Item } from 'semantic-ui-react'
 
 class Reports extends Component {
   state = {
@@ -21,7 +20,7 @@ class Reports extends Component {
   }
 
   componentDidMount () {
-    // filter to show only reports in the same zip code
+    // fetch earthquake data from USGS
     const date = new Date()
     let d = date.getDate();
     let m = date.getMonth() + 1;
@@ -40,8 +39,6 @@ class Reports extends Component {
       this.props.addReport(quakeResp.features)
     })
 
-    // let filterR = []
-    // filterR = this.props.reports.filter(r => r.poopzip === this.props.user.zipcode)
     this.setState({
       centerGPS: this.props.gps,
       filterReports: this.props.reports,
@@ -146,20 +143,7 @@ class Reports extends Component {
               onClick={this.handleLargeOnly}
           /> 
           </Menu.Item> : null}
-        {/* {this.props.reports.length > 0 ?
-        <Menu.Item>
-        <Dropdown 
-              fluid
-              selection
-              search
-              onChange={this.selectSize}
-              options={this.state.poopSize}
-              style={{width: 100}}
-              size='medium'
-              placeholder='Filter by size'
-          /> 
-        </Menu.Item> : null} */}
-
+        
         <Modal size='tiny' trigger={<Menu.Item>
           <Button animated='fade' 
           onClick={() => this.getWeather(`${this.props.user.zipcode}`)} size='medium' floated='right' inverted color="grey">

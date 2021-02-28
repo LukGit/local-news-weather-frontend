@@ -30,7 +30,7 @@ export class MapReports extends Component {
   }
   
   handleClick = (props, marker, e) => {
-    // this set the recenter GPS when user clicks on poop report
+    // this set the detail information of the quake and turn on the infowindow
     const quake = this.props.reports.find(r => r.id === props.name)
     const Q_URL = quake.properties.detail
     fetch(Q_URL)
@@ -49,8 +49,9 @@ export class MapReports extends Component {
     })
     
   }
-  // this shows a map with all the poop reports as markers on map
-  // each report item from store is mapped to a marker on map based on gps extracted from report photo
+  // this shows a map with earthquake reports as markers on map
+  // each report item from store is mapped to a marker on map based on gps data received from USGS
+  // details of the quake is displayed via a infowindow when the marker is clicked
   // initialCenter is to set map center when map is initially loaded
   // center is to set the map center when map is recentered by a user click
   render() {

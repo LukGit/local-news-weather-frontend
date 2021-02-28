@@ -16,21 +16,6 @@ class Navbar extends Component {
     
   }
 
-  refreshData = () => {
-    const reqObj = {
-      method: 'GET',
-      headers: {
-        'content-type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    }
-    fetch('http://localhost:3000/reports', reqObj)
-      .then(resp => resp.json())
-      .then(reports => {
-        this.props.addReport(reports)
-        this.props.history.push('/reports')
-      })
-  }
   // this handles logout by removing the token in local storage and calling logoutUser in reducer
   handleLogout = (e) => {
     localStorage.removeItem('token')
