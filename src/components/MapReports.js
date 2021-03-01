@@ -3,6 +3,7 @@ import { Map, Marker, GoogleApiWrapper, InfoWindow } from 'google-maps-react';
 import quakeS from '../img/quake24.png'
 import quakeM from '../img/quake36.png'
 import quakeL from '../img/quake48.png'
+import quakeX from '../img/quake64.png'
 import { withRouter } from 'react-router-dom'
 import { Header, Label, Divider, Item } from 'semantic-ui-react'
 
@@ -65,10 +66,12 @@ export class MapReports extends Component {
           let qIcon
           if (r.properties.mag < 5) {
             qIcon = quakeS
-          } else if (r.properties.mag < 6) {
+          } else if (r.properties.mag < 6.5) {
             qIcon = quakeM
-          } else {
+          } else if (r.properties.mag < 7.5){
             qIcon = quakeL
+          } else {
+            qIcon = quakeX
           }
           return <Marker
           key={r.id}

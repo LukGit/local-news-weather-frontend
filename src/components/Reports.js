@@ -46,30 +46,10 @@ class Reports extends Component {
     })
   }
 
-  selectSize = (e, { value }) => {
-    let filterX = []
-    if (this.state.myZipOnly) {
-      filterX = this.props.reports.filter(r => r.poopzip === this.props.user.zipcode)
-    } else {
-      filterX = this.props.reports
-    }
-    let filterS = []
-    if (value === "All") {
-      filterS = filterX
-    } else {
-      // let filterS = this.props.reports.filter(r => r.poopzip === this.props.user.zipcode)
-      filterS = filterX.filter(r => r.poop_size === value)
-    }
-    this.setState({
-      filterReports: filterS,
-      sizeFilter: value
-    })
-  }
-
   handleLargeOnly = (e, { checked }) => {
     let filterX = []
     if (checked) {
-      filterX = this.props.reports.filter(r => r.properties.mag > 6)
+      filterX = this.props.reports.filter(r => r.properties.mag > 7)
     } else {
       filterX = this.props.reports
     }
