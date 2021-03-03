@@ -50,6 +50,13 @@ export class MapReports extends Component {
     })
     
   }
+  onMapClick = (props) => {
+    if (this.state.showInfo) {
+      this.setState({
+        showInfo: false
+      })
+    }
+  }
   // this shows a map with earthquake reports as markers on map
   // each report item from store is mapped to a marker on map based on gps data received from USGS
   // details of the quake is displayed via a infowindow when the marker is clicked
@@ -61,6 +68,7 @@ export class MapReports extends Component {
       zoom={3}
       initialCenter={this.state.centerGPS}
       center={this.state.recenterGPS}
+      onClick={this.onMapClick}
       >
         {this.props.reports.map(r => {
           let qIcon
