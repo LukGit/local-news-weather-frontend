@@ -37,12 +37,11 @@ class Reports extends Component {
     .then(resp => resp.json())
     .then(quakeResp => {
       this.props.addReport(quakeResp.features)
-    })
-
-    this.setState({
-      centerGPS: this.props.gps,
-      filterReports: this.props.reports,
-      sizeFilter: "All"
+      this.setState({
+        centerGPS: this.props.gps,
+        filterReports: this.props.reports,
+        sizeFilter: "All"
+      })
     })
   }
 
