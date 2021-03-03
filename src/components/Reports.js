@@ -60,6 +60,7 @@ class Reports extends Component {
   }
 
   getWeather = (zip) => {
+    // api key in .env file
     const W_URL = "https://api.weatherapi.com/v1/forecast.json?key=" + process.env.REACT_APP_WEATHER_API_KEY + "&days=2&q=" + zip
     fetch(W_URL)
     .then(resp => resp.json())
