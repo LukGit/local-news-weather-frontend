@@ -21,11 +21,13 @@ class Reports extends Component {
 
   componentDidMount () {
     // fetch earthquake data from USGS
-    const date = new Date()
-    let d = date.getDate();
-    let m = date.getMonth() + 1;
-    let y = date.getFullYear();
+    const date1 = new Date()
+    date1.setDate(date1.getDate() + 1)
+    let d = date1.getDate();
+    let m = date1.getMonth() + 1;
+    let y = date1.getFullYear();
     const dateString =  y + '-' + (m <= 9 ? '0' + m : m) + '-' + (d <= 9 ? '0' + d : d)
+    const date = new Date()
     date.setDate(date.getDate() - 1)
     d = date.getDate();
     m = date.getMonth() + 1;
