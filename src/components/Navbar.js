@@ -25,6 +25,16 @@ class Navbar extends Component {
   render() {
     return (
       <Menu inverted color='brown' size='mini'>
+        <Menu.Item >
+          <Link to={'/reports'} className="item">
+            Earthquakes
+          </Link>
+        </Menu.Item>
+        <Menu.Item >
+          <Link to={'/hurricanes'} className="item">
+            Hurricanes
+          </Link>
+        </Menu.Item>
         <Menu.Item position='right'>
           <Link onClick={this.handleLogout}to={'/login'} className="item">
             Sign Out

@@ -22,3 +22,9 @@ export const addReport = reports => {
     reports
   };
 };
+export const addCaneReport = c_reports => {
+  return {
+    type: 'ADD_CANE_REPORT',
+    c_reports
+  };
+};

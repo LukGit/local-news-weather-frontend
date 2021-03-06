@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { addUser } from '../actions'
-import { addReport } from '../actions'
 import { currentUser } from '../actions'
 import { Form, Header, Icon } from 'semantic-ui-react'
 
@@ -37,8 +36,7 @@ class Login extends Component {
             centerGPS = {lat: location.results[0].geometry.location.lat, lng: location.results[0].geometry.location.lng}
             const newUser = {...user, gps: centerGPS}
             this.props.currentUser(newUser)
-            this.props.history.push('/report')
-            // this.getReports(user.jwt)
+            this.props.history.push('/reports')
           })
         }
       })
@@ -74,23 +72,12 @@ class Login extends Component {
             centerGPS = {lat: location.results[0].geometry.location.lat, lng: location.results[0].geometry.location.lng}
             const newUser = {...userData, gps: centerGPS}
             this.props.addUser(newUser)
-            this.props.history.push('/report')
-            // this.getReports(userData.jwt)
+            this.props.history.push('/reports')
           })
       }
     })
   }
   
-  getReports = (token) => {
-    // this is to get all the poop report and redirect to reports component
-    const COURSE_URL = 'http://localhost:3000/reports'
-    fetch(COURSE_URL, {headers: {'Authorization': `Bearer ${token}`}})
-      .then(resp => resp.json())
-      .then(reports => {
-        this.props.addReport(reports)
-        this.props.history.push('/weather')
-    })
-  }
 
   handleChange = (event, { name, value }) => {
     this.setState({ [name]: value });
@@ -101,7 +88,7 @@ class Login extends Component {
       <div className="login">
       <Header className="pageTitle" as="h1" size="huge" icon inverted>
         <Icon name="lightning"/>
-        Welcome To The Earthquake Tracker
+        Welcome To The Natual Disaster Tracker
       </Header>
         <Form onSubmit={this.loginUser}>
         <Form.Group widths='equal' inline >

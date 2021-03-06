@@ -5,6 +5,7 @@ import { Route, Switch } from 'react-router-dom'
 import Login from './components/Login'
 import Signup from './components/Signup'
 import Reports from './components/Reports'
+import CaneReports from './components/CaneReports'
 
 const App = () => {
   return (
@@ -13,7 +14,8 @@ const App = () => {
       <Switch>
         <Route path={'/login'} component={Login} />
         <Route path={'/signup'} component={Signup}/>
-        <Route path={'/report'} component={Reports} />
+        <Route path={'/reports'} component={Reports} />
+        <Route path={'/hurricanes'} component={CaneReports} />
         <Route path={'/'} component={Login} />
       </Switch>
       </BrowserRouter>

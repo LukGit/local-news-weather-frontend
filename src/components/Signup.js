@@ -68,15 +68,6 @@ signupUser = (e) => {
   }
 }
 
-getReports = (token) => {
-  const COURSE_URL = 'http://localhost:3000/reports'
-  fetch(COURSE_URL, {headers: {'Authorization': `Bearer ${token}`}})
-    .then(resp => resp.json())
-    .then(reports => {
-      this.props.addReport(reports)
-  })
-}
-
   render() {
     return (
       <div className="login">

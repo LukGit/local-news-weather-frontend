@@ -5,7 +5,7 @@ import quakeM from '../img/quake36.png'
 import quakeL from '../img/quake48.png'
 import quakeX from '../img/quake64.png'
 import { withRouter } from 'react-router-dom'
-import { Header, Label, Divider, Item } from 'semantic-ui-react'
+import { Item } from 'semantic-ui-react'
 
 
 export class MapReports extends Component {
@@ -37,7 +37,6 @@ export class MapReports extends Component {
     fetch(Q_URL)
     .then(resp => resp.json())
     .then(quakeResp => {
-      console.log("quake detal", quakeResp.properties)
       this.setState({
         quakePl: quake.properties.place,
         quakeMag: quake.properties.mag,

@@ -4,7 +4,8 @@ import { combineReducers } from "redux";
 
 const rootReducer = combineReducers({
   users: usersReducer,
-  reports: reportsReducer
+  reports: reportsReducer,
+  c_reports: caneReportsReducer
 });
 
 export default rootReducer;
@@ -27,9 +28,21 @@ function usersReducer(state = { user: '', userId: 0, zipcode: 0, gps: {}}, actio
 
 function reportsReducer(state = [], action) {
   switch (action.type) {
-      // then add_course return all courses to store
+      // when add_report return all earthquakes to store
     case "ADD_REPORT":
-      return [...action.reports]
+      return [...action.reports]    
+      // when logout clear store
+    case "LOGOUT":
+      return []
+    default:
+      return state
+  }
+}
+function caneReportsReducer(state = [], action) {
+  switch (action.type) {
+      // when add_cane_report return all hurricanes to store
+    case "ADD_CANE_REPORT":
+      return [...action.c_reports]
       // when logout clear store
     case "LOGOUT":
       return []
