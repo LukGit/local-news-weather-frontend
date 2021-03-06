@@ -35,7 +35,7 @@ There is a CORS problem with the NOAA end point. This is circumvented using Moes
 
 Earthquake data is obtained from the USGS API site. Use this link: "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2021-02-25&endtime=2021-02-26&eventtype=earthquake&minmagnitude=4"
 
-Hurricane data is obtain from the NOAA API site at: "https://www.nhc.noaa.gov/CurrentStorms.json". 
+Hurricane data is obtained from the NOAA API site at: "https://www.nhc.noaa.gov/CurrentStorms.json". 
 
 In order to obtain current weather condition via Weather API, use this link: "https://api.weatherapi.com/v1/forecast.json?key=apikey&q=zip" (substitute apikey with your own key and zip with zip code in decimal)
 ```
