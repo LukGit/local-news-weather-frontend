@@ -1,5 +1,6 @@
 # The Natual Disaster Tracker
-![alt text](https://user-images.githubusercontent.com/60716393/110066453-18f03200-7d37-11eb-98a1-41b4847b70fb.png)
+![alt text](https://user-images.githubusercontent.com/60716393/110196818-aea9c100-7e0c-11eb-8ae6-0d4e19d26cc6.png)
+![alt text](https://user-images.githubusercontent.com/60716393/110196769-5e326380-7e0c-11eb-98ab-a4f1151bec6f.png)
 This is an app for users to have a quick glance of natual disasters around the globe. The earthquake button displays a page that shows significant earthquakes witin the past 24hrs, accroding to data from US Geological Survey (USGS). A map displays icons of various sizes representing quakes of various magnitudes. Only quakes with magnitude over 4 are displayed. When user clicks on the quake marker, it will show the detail information of the quake. The hurricane button displays a page that shows active tropical cyclones, according data from National Hurricane Center. A map displays icons of cyclones of various classifications, from hurricanes to tropical depressions. When clicking on the hurricane marker, it will show the details information of the cyclone.
 
 ## Technical information
