@@ -4,7 +4,7 @@ import caneS from '../img/hts24.png'
 import caneM from '../img/hts32.png'
 import caneL from '../img/hts48.png'
 import { withRouter } from 'react-router-dom'
-import { CardMeta, Item } from 'semantic-ui-react'
+import { Item } from 'semantic-ui-react'
 
 
 export class MapCaneReports extends Component {
@@ -120,7 +120,6 @@ export class MapCaneReports extends Component {
   // initialCenter is to set map center when map is initially loaded
   // center is to set the map center when map is recentered by a user click
   render() {
-    console.log("In map render", this.props.c_reports)
     return (
       <Map google={this.props.google} 
       zoom={4}
