@@ -4,7 +4,7 @@ import caneS from '../img/hts24.png'
 import caneM from '../img/hts32.png'
 import caneL from '../img/hts48.png'
 import { withRouter } from 'react-router-dom'
-import { Item } from 'semantic-ui-react'
+import { CardMeta, Item } from 'semantic-ui-react'
 
 
 export class MapCaneReports extends Component {
@@ -21,6 +21,7 @@ export class MapCaneReports extends Component {
     canePressure: "",
     caneSpeedDir: "",
     caneAdviceLink: "",
+    caneUpdated: "",
     caneForecastLink: ""
   }
   
@@ -100,8 +101,10 @@ export class MapCaneReports extends Component {
     canePressure: `${cane.pressure}mbar`,
     caneAdviceLink: cane.publicAdvisory.url,
     caneForecastLink: cane.forecastAdvisory.url,
+    caneUpdated: cane.lastUpdate,
     hMarker: marker,
-    showInfo: true
+    showInfo: true,
+    recenterGPS: {lat: cane.latitudeNumeric, lng: cane.longitudeNumeric}
   })
   }
   onMapClick = (props) => {
@@ -120,8 +123,8 @@ export class MapCaneReports extends Component {
     console.log("In map render", this.props.c_reports)
     return (
       <Map google={this.props.google} 
-      zoom={3}
-      initialCenter={this.state.centerGPS}
+      zoom={4}
+      initialCenter={{lat: 24.64053936080381, lng: -93.95208035058195}}
       center={this.state.recenterGPS}
       onClick={this.onMapClick}
       >
@@ -185,6 +188,11 @@ export class MapCaneReports extends Component {
               <Item>
                 <Item.Content>
                 <Item.Description as='a' content='Click to see detail forecast' href={this.state.caneForecastLink} target="_blank"></Item.Description>
+                  </Item.Content>
+                </Item>
+              <Item>
+                <Item.Content>
+                <Item.Description>Update: {this.state.caneUpdated}</Item.Description>
                   </Item.Content>
                 </Item>
               </Item.Group>
