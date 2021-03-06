@@ -29,7 +29,7 @@ In order to use Sematic UI react, the following must be specified in the index.h
 <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css" />
 ```
 
-There is a CORS problem with the NPAA end point. This is circumvented using Moesif Origin & CORS Changer which is a plugin that allows you to send cross-domain requests. You can also override Request Origin and CORS headers. The extenion on Chrome must be turned on in order for this to work.
+There is a CORS problem with the NOAA end point. This is circumvented using Moesif Origin & CORS Changer which is a plugin that allows you to send cross-domain requests. You can also override Request Origin and CORS headers. The extenion on Chrome must be turned on in order for this to work.
 
 ## Extermal API
 
