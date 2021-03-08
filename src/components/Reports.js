@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import Navbar from './Navbar';
 import MapReports from './MapReports'
 import { addReport } from '../actions'
-import { Label, Icon, Menu, Checkbox } from 'semantic-ui-react'
+import { Label, Icon, Menu, Checkbox, Popup } from 'semantic-ui-react'
 
 class Reports extends Component {
   state = {
@@ -78,11 +78,12 @@ class Reports extends Component {
         </Menu.Item>
         {this.props.reports.length > 0 ?
         <Menu.Item>
-          <Checkbox 
+          <Popup content='Show only earthquakes over M7.0' trigger={<Checkbox 
               checked={this.state.largeOnly}
-              label='Large quake only'
+              label='Large quake'
               onClick={this.handleLargeOnly}
-          /> 
+          /> } />
+          
           </Menu.Item> : null}
         </Menu>
         <MapReports reports={this.state.filterReports} zipcode={this.props.user.zipcode} gps={this.props.user.gps}/>

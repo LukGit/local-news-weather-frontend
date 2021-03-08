@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import Navbar from './Navbar';
 import MapCaneReports from './MapCaneReports'
 import { addCaneReport } from '../actions'
-import { Label, Icon, Menu, Checkbox, Modal, Button, Item } from 'semantic-ui-react'
+import { Label, Icon, Menu, Checkbox, Modal, Button, Item, Popup } from 'semantic-ui-react'
 
 class CaneReports extends Component {
   state = {
@@ -17,7 +17,7 @@ class CaneReports extends Component {
     forecastIcon: "",
     hourLine1: "",
     hourLine2: ""
-  }
+  } 
 
   componentDidMount () {
     // fetch hurricane data from NOAA
@@ -112,14 +112,15 @@ class CaneReports extends Component {
         </Menu.Item>
         {this.props.c_reports.length > 0 ?
         <Menu.Item>
-          <Checkbox 
+          <Popup content='Show only hurricanes and tropical storms' trigger={<Checkbox 
               checked={this.state.htsOnly}
-              label='Hurricanes/Tropical Storms only'
+              label='Hurricanes/TS'
               onClick={this.handleHtsOnly}
-          /> 
+          /> } />
           </Menu.Item> : null}
         
         <Modal size='tiny' trigger={<Menu.Item>
+          <Popup content='See local weather forecast' trigger={
           <Button animated='fade' 
           onClick={() => this.getWeather(`${this.props.user.zipcode}`)} size='medium' floated='right' inverted color="grey">
             <Button.Content visible>
@@ -128,7 +129,7 @@ class CaneReports extends Component {
             <Button.Content hidden>
             Weather
             </Button.Content>
-          </Button></Menu.Item>} closeIcon>
+          </Button>} /></Menu.Item>} closeIcon>
           <Modal.Content>
             <Item.Group>
               <Item>
