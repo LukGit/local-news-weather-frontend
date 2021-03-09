@@ -49,7 +49,7 @@ class Reports extends Component {
 
   handleMg = (e) => {
     let filterY = []
-    filterY = this.props.reports.filter(r => r.properties.mag > e.target.value)
+    filterY = this.props.reports.filter(r => r.properties.mag >= e.target.value)
     this.setState({
       mg: e.target.value,
       filterReports: filterY
@@ -73,7 +73,7 @@ class Reports extends Component {
         </Menu.Item>
         {this.props.reports.length > 0 ?
         <Menu.Item>
-          <Popup content='Show only earthquakes over magnitude' trigger={
+          <Popup content='Show only earthquakes at or over magnitude' trigger={
            <div> 
            <div>M {this.state.mg}</div>
            <input type='range' min={4} max={10} value={this.state.mg} onChange={this.handleMg}/>     
