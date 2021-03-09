@@ -16,7 +16,8 @@ class Reports extends Component {
     forecast: "",
     forecastIcon: "",
     hourLine1: "",
-    hourLine2: ""
+    hourLine2: "",
+    mg: 4
   }
 
   componentDidMount () {
@@ -46,19 +47,14 @@ class Reports extends Component {
     })
   }
 
-  handleLargeOnly = (e, { checked }) => {
-    let filterX = []
-    if (checked) {
-      filterX = this.props.reports.filter(r => r.properties.mag > 7)
-    } else {
-      filterX = this.props.reports
-    }
+  handleMg = (e) => {
+    let filterY = []
+    filterY = this.props.reports.filter(r => r.properties.mag > e.target.value)
     this.setState({
-      largeOnly: checked,
-      filterReports: filterX
+      mg: e.target.value,
+      filterReports: filterY
     })
   }
-
   // this shows the NavBar and the MapReports which is also passed the report items to display on map
   render() {
     if (!this.props.user.user){
@@ -71,19 +67,18 @@ class Reports extends Component {
         <Menu inverted color='grey' size='mini'>
         <Menu.Item>
         <Label size='large' color='grey'> 
-        <Icon name='hand point down'/>
-        {this.props.user.user}, 
-        {this.props.reports.length > 0 ? " Here are the significant eqrthquakes in the last 24hrs" : "No Earthquake In Last 24hrs!"}
+        <Icon name='lightning'/>
+        {this.props.reports.length > 0 ? "Significant eqrthquakes in the past 24hrs" : "No Earthquake In Last 24hrs!"}
         </Label> 
         </Menu.Item>
         {this.props.reports.length > 0 ?
         <Menu.Item>
-          <Popup content='Show only earthquakes over M7.0' trigger={<Checkbox 
-              checked={this.state.largeOnly}
-              label='Large quake'
-              onClick={this.handleLargeOnly}
-          /> } />
-          
+          <Popup content='Show only earthquakes over magnitude' trigger={
+           <div> 
+           <div>M {this.state.mg}</div>
+           <input type='range' min={4} max={10} value={this.state.mg} onChange={this.handleMg}/>     
+           </div> 
+          }/>
           </Menu.Item> : null}
         </Menu>
         <MapReports reports={this.state.filterReports} zipcode={this.props.user.zipcode} gps={this.props.user.gps}/>
