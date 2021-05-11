@@ -23,8 +23,8 @@ class CaneReports extends Component {
     // fetch hurricane data from NOAA
     // test data API is https://www.nhc.noaa.gov/productexamples/NHC_JSON_Sample.json
     // real data site is https://www.nhc.noaa.gov/CurrentStorms.json
-    // const H_URL = "https://www.nhc.noaa.gov/CurrentStorms.json"
-    const H_URL = "https://www.nhc.noaa.gov/productexamples/NHC_JSON_Sample.json"
+    const H_URL = "https://www.nhc.noaa.gov/CurrentStorms.json"
+    // const H_URL = "https://www.nhc.noaa.gov/productexamples/NHC_JSON_Sample.json"
     // this fetch has a CORS problem because of the end point
     // this is circumvented using Moesif Origin & CORS Changer which is a plugin that allows you to send cross-domain requests. 
     // You can also override Request Origin and CORS headers. 
