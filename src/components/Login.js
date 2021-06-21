@@ -29,7 +29,7 @@ class Login extends Component {
           this.props.history.push('/login')
         } else {
           let centerGPS
-          const G_URL = "https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDAAA0HEZLvUa2hQ-54gAG5TXheH1-pEZY&components=postal_code:" + user.zipcode.toString()
+          const G_URL = "https://maps.googleapis.com/maps/api/geocode/json?key=" + process.env.REACT_APP_GOOGLE_API_KEY + "&components=postal_code:" + user.zipcode.toString()
           fetch(G_URL)
           .then(resp => resp.json())
           .then(location => {
@@ -65,7 +65,7 @@ class Login extends Component {
       }else {
         localStorage.setItem("token", userData.jwt)   
         let centerGPS
-        const G_URL = "https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyDAAA0HEZLvUa2hQ-54gAG5TXheH1-pEZY&components=postal_code:" + userData.zipcode.toString()
+        const G_URL = "https://maps.googleapis.com/maps/api/geocode/json?key=" + process.env.REACT_APP_GOOGLE_API_KEY + "&components=postal_code:" + userData.zipcode.toString()
         fetch(G_URL)
           .then(resp => resp.json())
           .then(location => {
