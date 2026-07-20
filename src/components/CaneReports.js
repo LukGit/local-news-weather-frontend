@@ -46,24 +46,28 @@ class CaneReports extends Component {
 
   // Dedicated dynamic fetch pipeline for tracks and cones
   fetchStormTracks = (storms) => {
-    // --- 1. Fetch Cones Globally from the verified Summary Layer ---
+    // 1. Fetch Cones Globally from the verified Summary Layer
     const globalConeUrl = `https://mapservices.weather.noaa.gov/tropical/rest/services/tropical/NHC_tropical_weather_summary/MapServer/7/query?where=1%3D1&outFields=*&f=geojson`;
     
     fetch(globalConeUrl)
       .then(res => res.json())
       .then(geojsonData => {
-        if (geojsonData.features) {
-          // Loop through all active storms in our app state
-          storms.forEach(storm => {
-            // Find the matching feature in the NOAA summary payload
-            // We strip any dashes/letters to align "ep052026" or similar naming rules
-            const matchingFeature = geojsonData.features.find(feature => {
-              const fileDateStr = feature.properties.idp_source || ""; // e.g., "ep052026-001..."
-              return fileDateStr.toLowerCase().includes(storm.id.toLowerCase()) || 
-                     feature.properties.binnumber?.toLowerCase() === storm.id.toLowerCase();
-            });
+        if (!geojsonData.features) return;
 
-            if (matchingFeature && matchingFeature.geometry?.coordinates) {
+        // 2. Loop through active storms and map them to NOAA's dynamic "bin" slots
+        storms.forEach(storm => {
+          let targetBin = storm.id; // Fallback to raw ID (e.g., "ep062026")
+
+          // Find this storm in the global cone layer
+          const matchingFeature = geojsonData.features.find(feature => {
+            const fileDateStr = feature.properties.idp_source || "";
+            return fileDateStr.toLowerCase().includes(storm.id.toLowerCase()) || 
+                   (feature.properties.stormid && feature.properties.stormid.toLowerCase() === storm.id.toLowerCase());
+          });
+
+          if (matchingFeature) {
+            // Process and save the Cone Polygon
+            if (matchingFeature.geometry?.coordinates) {
               const rawCoordinates = matchingFeature.geometry.coordinates[0];
               const cleanCoords = rawCoordinates.map(coord => ({ lat: coord[1], lng: coord[0] }));
               
@@ -71,51 +75,65 @@ class CaneReports extends Component {
                 conePolygons: { ...prevState.conePolygons, [storm.id]: cleanCoords }
               }));
             }
-          });
-        }
+            
+            // CRITICAL FIX: Extract the actual NOAA active map slot (e.g., "EP1", "AT2")
+            if (matchingFeature.properties.binnumber) {
+              targetBin = matchingFeature.properties.binnumber; 
+            }
+          }
+
+          // 3. Fetch Line Tracks using targetBin (EP1 calculates to Layer 142 instead of 272!)
+          const pastLayer = this.getLayerNumFromStormId(targetBin, 'past');
+          const futureLayer = this.getLayerNumFromStormId(targetBin, 'future');
+
+          // Helper to parse multiple segments and flatten them into ONE continuous array
+          const parseTrackFeatures = (features) => {
+            if (!features || !features.length) return [];
+            return features.flatMap(feature => {
+              if (!feature.geometry || !feature.geometry.coordinates) return [];
+              
+              const coords = feature.geometry.coordinates;
+              const type = feature.geometry.type;
+
+              if (type === "LineString") {
+                return coords.map(c => ({ lat: c[1], lng: c[0] }));
+              }
+              if (type === "MultiLineString") {
+                return coords.flat().map(c => ({ lat: c[1], lng: c[0] }));
+              }
+              return [];
+            });
+          };
+
+          if (pastLayer) {
+            const pastUrl = `https://mapservices.weather.noaa.gov/tropical/rest/services/tropical/NHC_tropical_weather/MapServer/${pastLayer}/query?where=1%3D1&outFields=*&f=geojson`;
+            fetch(pastUrl)
+              .then(res => res.json())
+              .then(trackData => {
+                if (trackData.features && trackData.features.length > 0) {
+                  this.setState(prevState => ({
+                    // Store the flattened coordinates using the original storm.id
+                    pastTracks: { ...prevState.pastTracks, [storm.id]: parseTrackFeatures(trackData.features) }
+                  }));
+                }
+              }).catch(err => console.error(err));
+          }
+
+          if (futureLayer) {
+            const futureUrl = `https://mapservices.weather.noaa.gov/tropical/rest/services/tropical/NHC_tropical_weather/MapServer/${futureLayer}/query?where=1%3D1&outFields=*&f=geojson`;
+            fetch(futureUrl)
+              .then(res => res.json())
+              .then(trackData => {
+                if (trackData.features && trackData.features.length > 0) {
+                  this.setState(prevState => ({
+                    futureTracks: { ...prevState.futureTracks, [storm.id]: parseTrackFeatures(trackData.features) }
+                  }));
+                }
+              }).catch(err => console.error(err));
+          }
+        });
       })
       .catch(err => console.error("Error fetching global storm forecast cones:", err));
-
-
-    // --- 2. Keep your existing individual line track loops running underneath ---
-    storms.forEach(storm => {
-      const pastLayer = this.getLayerNumFromStormId(storm.id, 'past');
-      const futureLayer = this.getLayerNumFromStormId(storm.id, 'future');
-
-      if (pastLayer) {
-        const pastUrl = `https://mapservices.weather.noaa.gov/tropical/rest/services/tropical/NHC_tropical_weather/MapServer/${pastLayer}/query?where=1%3D1&outFields=*&f=geojson`;
-        fetch(pastUrl)
-          .then(res => res.json())
-          .then(geojsonData => {
-            if (geojsonData.features && geojsonData.features.length > 0) {
-              const rawCoordinates = geojsonData.features[0].geometry.coordinates;
-              const cleanCoords = rawCoordinates.map(coord => ({ lat: coord[1], lng: coord[0] }));
-              
-              this.setState(prevState => ({
-                pastTracks: { ...prevState.pastTracks, [storm.id]: cleanCoords }
-              }));
-            }
-          })
-          .catch(err => console.error(`Error fetching past track for ${storm.id}:`, err));
-      }
-
-      if (futureLayer) {
-        const futureUrl = `https://mapservices.weather.noaa.gov/tropical/rest/services/tropical/NHC_tropical_weather/MapServer/${futureLayer}/query?where=1%3D1&outFields=*&f=geojson`;
-        fetch(futureUrl)
-          .then(res => res.json())
-          .then(geojsonData => {
-            if (geojsonData.features && geojsonData.features.length > 0) {
-              const rawCoordinates = geojsonData.features[0].geometry.coordinates;
-              const cleanCoords = rawCoordinates.map(coord => ({ lat: coord[1], lng: coord[0] }));
-              
-              this.setState(prevState => ({
-                futureTracks: { ...prevState.futureTracks, [storm.id]: cleanCoords }
-              }));
-            }
-          })
-          .catch(err => console.error(`Error fetching future track for ${storm.id}:`, err));
-      }
-    });
   }
 
   componentDidMount () {
