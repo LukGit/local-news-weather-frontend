@@ -5,7 +5,8 @@ import { combineReducers } from "redux";
 const rootReducer = combineReducers({
   users: usersReducer,
   reports: reportsReducer,
-  c_reports: caneReportsReducer
+  c_reports: caneReportsReducer,
+  f_reports: fireReportsReducer
 });
 
 export default rootReducer;
@@ -43,6 +44,18 @@ function caneReportsReducer(state = [], action) {
       // when add_cane_report return all hurricanes to store
     case "ADD_CANE_REPORT":
       return [...action.c_reports]
+      // when logout clear store
+    case "LOGOUT":
+      return []
+    default:
+      return state
+  }
+}
+function fireReportsReducer(state = [], action) {
+  switch (action.type) {
+      // when add_fire_report return all wildfires to store
+    case "ADD_FIRE_REPORT":
+      return [...action.f_reports]
       // when logout clear store
     case "LOGOUT":
       return []

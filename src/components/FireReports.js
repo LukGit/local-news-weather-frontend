@@ -20,7 +20,8 @@ class FireReports extends Component {
   fetchActiveWildfires = () => {
     const params = new URLSearchParams({
       where: "poly_GISAcres >= 100",
-      outFields: "OBJECTID,poly_IncidentName,poly_GISAcres",
+      //outFields: "OBJECTID,poly_IncidentName,poly_GISAcres",
+      outFields: "OBJECTID,poly_IncidentName,poly_GISAcres,attr_PercentContained",
       f: "geojson"
     });
 
@@ -46,6 +47,8 @@ class FireReports extends Component {
               id: feature.properties.OBJECTID,
               name: feature.properties.poly_IncidentName || "Active Wildfire",
               acres: Math.round(feature.properties.poly_GISAcres || 0),
+              // 2. Extract containment (fallback to null if unpopulated)
+              containment: feature.properties.attr_PercentContained ?? feature.properties.poly_PercentContained ?? null,
               position: { lat: firstCoord[1], lng: firstCoord[0] } // Google Maps shape: {lat, lng}
             };
           }).filter(Boolean); // Clear out any null records safely
@@ -111,7 +114,7 @@ class FireReports extends Component {
 
 const mapStateToProps = state => {
   return { 
-    f_reports: state.f_reports, // Assumes your reducer populates this state key via addFireReport action
+    f_reports: state.f_reports, 
     user: state.users
   };
 }

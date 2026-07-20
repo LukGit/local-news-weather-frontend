@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Map, Marker, GoogleApiWrapper, InfoWindow } from 'google-maps-react';
+import { Map, Marker, GoogleApiWrapper, InfoWindow, Polyline, Polygon } from 'google-maps-react';
 import caneS from '../img/hts24.png'
 import caneM from '../img/hts32.png'
 import caneL from '../img/hts48.png'
@@ -119,7 +119,23 @@ export class MapCaneReports extends Component {
   // details of the quake is displayed via a infowindow when the marker is clicked
   // initialCenter is to set map center when map is initially loaded
   // center is to set the map center when map is recentered by a user click
+  // Added new code to plot hurricane past and future tracks on the map 7/2/2026
+  // Added new code to plot hurricane future path uncertainty cone on the map  7/14/2026
   render() {
+    // --- DEBUGGING BLOCK START ---
+    //console.log("=== HURRICANE CONE TELEMETRY CHECK ===");
+    //console.log("Total c_reports incoming:", this.props.c_reports ? this.props.c_reports.length : 0);
+    //console.log("Raw conePolygons keys available:", Object.keys(this.props.conePolygons || {}));
+    
+    //this.props.c_reports.forEach(r => {
+    //  const path = this.props.conePolygons[r.id];
+    //  console.log(`Storm: ${r.name || r.id} (${r.id}) | Cone Array Size:`, path ? path.length : "UNDEFINED / MISSING");
+    //  if (path && path.length > 0) {
+    //    console.log(`Sample coordinate for ${r.id}:`, path[0]);
+    //  }
+    //});
+    //console.log("======================================");
+    // --- DEBUGGING BLOCK END ---
     return (
       <Map google={this.props.google} 
       zoom={4}
@@ -127,21 +143,93 @@ export class MapCaneReports extends Component {
       center={this.state.recenterGPS}
       onClick={this.onMapClick}
       >
+        {/* ADDED: Dynamic Forecast Cone Boundary Shading */}
+        {this.props.c_reports.map(r => {
+          const conePath = this.props.conePolygons[r.id];
+          if (!conePath || conePath.length === 0) return null;
+
+          return (
+            <Polygon
+              key={`cone-${r.id}`}
+              paths={conePath} // google-maps-react uses "paths" for polygons
+              strokeColor="#dc2626"
+              strokeOpacity={0.5}
+              strokeWeight={2}
+              fillColor="#dc2626"
+              fillOpacity={0.15} // Translucent caution overlay
+              geodesic={true}
+            />
+          );
+        })}
+        {/* ADDED: Loop to draw the Past Tracks Line (Solid Black) */}
+        {this.props.c_reports.map(r => {
+          const pastPath = this.props.pastTracks[r.id];
+          if (!pastPath || pastPath.length === 0) return null;
+
+          // Clone path array so we don't accidentally mutate the underlying parent state
+          const connectedPastPath = [...pastPath];
+          // Connect the trail directly to the storm's current marker location
+          connectedPastPath.push({ lat: r.latitudeNumeric, lng: r.longitudeNumeric });
+
+          return (
+            <Polyline
+              key={`past-${r.id}`}
+              path={connectedPastPath}
+              strokeColor="#000000"
+              strokeOpacity={0.8}
+              strokeWeight={3}
+              geodesic={true}
+            />
+          );
+        })}
+
+        {/* ADDED: Loop to draw the Future Tracks Line (Solid Red) */}
+        {this.props.c_reports.map(r => {
+          const futurePath = this.props.futureTracks[r.id];
+          if (!futurePath || futurePath.length === 0) return null;
+
+          // Forecast data typically originates right at the current marker coordinate, 
+          // but we add it manually here as a safeguard to prevent gaps
+          const connectedFuturePath = [{ lat: r.latitudeNumeric, lng: r.longitudeNumeric }, ...futurePath];
+
+          return (
+            <Polyline
+              key={`future-${r.id}`}
+              path={connectedFuturePath}
+              strokeColor="#dc2626"
+              strokeOpacity={0.9}
+              strokeWeight={3}
+              geodesic={true}
+            />
+          );
+        })}
+      
         {this.props.c_reports.map(r => {
           let hIcon
+          let iconSize = 24; // Default baseline pixels for caneS
           if (r.classification === "HU") {
             hIcon = caneL
+            iconSize = 48
           } else if (r.classification === "TS" || r.classification === "STS") {
             hIcon = caneM
+            iconSize = 32
           } else {
             hIcon = caneS
+            iconSize = 24
           }
           return <Marker
           key={r.id}
           name={r.id}
-          icon={hIcon}
+          title={r.name}
           position={{lat: r.latitudeNumeric, lng: r.longitudeNumeric}}
           onClick={this.handleClick}
+          icon={{
+                url: hIcon,
+                // Scales the physical image footprint boundary
+                scaledSize: new this.props.google.maps.Size(iconSize, iconSize),
+                // Crucial fix: Sets the anchor map projection to exactly half the height/width to center icon on GPS location
+                anchor: new this.props.google.maps.Point(iconSize / 2, iconSize / 2)
+          }}
           >
           </Marker>
         })}

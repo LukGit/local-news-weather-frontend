@@ -29,7 +29,8 @@ class Reports extends Component {
     let y = date1.getFullYear();
     const dateString =  y + '-' + (m <= 9 ? '0' + m : m) + '-' + (d <= 9 ? '0' + d : d)
     const date = new Date()
-    date.setDate(date.getDate() - 1)
+    // change date from 1 to 3 to match opacity calculation
+    date.setDate(date.getDate() - 3 )
     d = date.getDate();
     m = date.getMonth() + 1;
     y = date.getFullYear();
@@ -66,9 +67,9 @@ class Reports extends Component {
         <Navbar/>
         <Menu inverted color='grey' size='mini'>
         <Menu.Item>
-        <Label size='large' color='grey'> 
+        <Label size='large' color='orange'> 
         <Icon name='lightning'/>
-        {this.props.reports.length > 0 ? "Significant eqrthquakes in the past 24hrs" : "No Earthquake In Last 24hrs!"}
+        {this.props.reports.length > 0 ? "Significant eqrthquakes in the past 72hrs" : "No Earthquake In Last 72hrs!"}
         </Label> 
         </Menu.Item>
         {this.props.reports.length > 0 ?

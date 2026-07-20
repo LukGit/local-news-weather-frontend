@@ -16,7 +16,8 @@ export class MapFireReports extends Component {
     activeMarker: {},
     showInfo: false,
     fireName: "",
-    fireAcres: 0
+    fireAcres: 0,
+    fireContain: 0
   }
   
   componentDidMount () {
@@ -30,6 +31,7 @@ export class MapFireReports extends Component {
     this.setState({
       fireName: props.fire.name,
       fireAcres: props.fire.acres,
+      fireContain: props.fire.containment,
       activeMarker: marker,
       showInfo: true,
       recenterGPS: props.position // Centers map on the fire when clicked
@@ -43,6 +45,16 @@ export class MapFireReports extends Component {
       });
     }
   }
+// Dynamic Opacity: 0% contained = 1.0 (Full) | 100% contained = 0.25 (Subdued)
+  getOpacity = (containment) => {
+    if (containment === null || containment === undefined) return 1.0;
+    
+    const minOpacity = 0.10;
+    const maxOpacity = 1.0;
+    const opacity = maxOpacity - ((containment / 100) * (maxOpacity - minOpacity));
+    
+    return parseFloat(opacity.toFixed(2));
+  };
 
   render() {
     return (
@@ -68,12 +80,13 @@ export class MapFireReports extends Component {
           } else if (fire.acres >= 1000) {
             selectedIcon = fire32;   
           }
-
+          const iconOpacity = this.getOpacity(fire.containment);
           return (
             <Marker
               key={`fire-pin-${fire.id}`}
               position={fire.position}
               title={fire.name}
+              opacity={iconOpacity}   // Visual fading based on containment %
               fire={fire} // Passing the custom fire object down to the marker props
               icon={{ url: selectedIcon }} 
               onClick={this.handleMarkerClick} 
@@ -97,6 +110,16 @@ export class MapFireReports extends Component {
                 <Item.Header>Acres Burned</Item.Header>
                 <Item.Description>
                   {this.state.fireAcres ? this.state.fireAcres.toLocaleString() : "Unknown"}
+                </Item.Description>
+              </Item.Content>
+            </Item>  
+            <Item>
+              <Item.Content>
+                <Item.Header>Containment</Item.Header>
+                <Item.Description>
+                   {this.state.fireContain !== null && this.state.fireContain !== undefined
+                   ? `${this.state.fireContain.toLocaleString()}%` 
+                  : "Unknown"}
                 </Item.Description>
               </Item.Content>
             </Item>  

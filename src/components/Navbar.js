@@ -35,6 +35,11 @@ class Navbar extends Component {
             Hurricanes
           </Link>
         </Menu.Item>
+        <Menu.Item >
+          <Link to={'/wildfires'} className="item">
+            Wildfires
+          </Link>
+        </Menu.Item>
         <Menu.Item position='right'>
           <Link onClick={this.handleLogout}to={'/login'} className="item">
             Sign Out

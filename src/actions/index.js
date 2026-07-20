@@ -28,3 +28,9 @@ export const addCaneReport = c_reports => {
     c_reports
   };
 };
+export const addFireReport = f_reports => {
+  return {
+    type: 'ADD_FIRE_REPORT',
+    f_reports
+  };
+};

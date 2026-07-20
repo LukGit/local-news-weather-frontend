@@ -16,8 +16,107 @@ class CaneReports extends Component {
     forecast: "",
     forecastIcon: "",
     hourLine1: "",
-    hourLine2: ""
+    hourLine2: "",
+    // New states to hold path arrays mapped by storm ID
+    pastTracks: {},
+    futureTracks: {},
+    conePolygons: {}
   } 
+  // Helper method to compute the layer offsets from the NOAA identifier
+  getLayerNumFromStormId = (stormId, type) => {
+    const basin = stormId.substring(0, 2).toUpperCase();
+    const stormNum = parseInt(stormId.substring(2, 4), 10);
+
+    const basinBaselines = {
+      AT: 6,    // Atlantic
+      EP: 136,  // East Pacific
+      CP: 266   // Central Pacific
+    };
+
+    const startLayer = basinBaselines[basin];
+    if (!startLayer) return null;
+
+    const stormBlockStart = startLayer + ((stormNum - 1) * 26);
+    
+    if (type === 'future') return stormBlockStart + 1;
+    if (type === 'past') return stormBlockStart + 6;
+    if (type === 'cone') return stormBlockStart + 7; // Cone is offset +7
+    return null;
+  };
+
+  // Dedicated dynamic fetch pipeline for tracks and cones
+  fetchStormTracks = (storms) => {
+    // --- 1. Fetch Cones Globally from the verified Summary Layer ---
+    const globalConeUrl = `https://mapservices.weather.noaa.gov/tropical/rest/services/tropical/NHC_tropical_weather_summary/MapServer/7/query?where=1%3D1&outFields=*&f=geojson`;
+    
+    fetch(globalConeUrl)
+      .then(res => res.json())
+      .then(geojsonData => {
+        if (geojsonData.features) {
+          // Loop through all active storms in our app state
+          storms.forEach(storm => {
+            // Find the matching feature in the NOAA summary payload
+            // We strip any dashes/letters to align "ep052026" or similar naming rules
+            const matchingFeature = geojsonData.features.find(feature => {
+              const fileDateStr = feature.properties.idp_source || ""; // e.g., "ep052026-001..."
+              return fileDateStr.toLowerCase().includes(storm.id.toLowerCase()) || 
+                     feature.properties.binnumber?.toLowerCase() === storm.id.toLowerCase();
+            });
+
+            if (matchingFeature && matchingFeature.geometry?.coordinates) {
+              const rawCoordinates = matchingFeature.geometry.coordinates[0];
+              const cleanCoords = rawCoordinates.map(coord => ({ lat: coord[1], lng: coord[0] }));
+              
+              this.setState(prevState => ({
+                conePolygons: { ...prevState.conePolygons, [storm.id]: cleanCoords }
+              }));
+            }
+          });
+        }
+      })
+      .catch(err => console.error("Error fetching global storm forecast cones:", err));
+
+
+    // --- 2. Keep your existing individual line track loops running underneath ---
+    storms.forEach(storm => {
+      const pastLayer = this.getLayerNumFromStormId(storm.id, 'past');
+      const futureLayer = this.getLayerNumFromStormId(storm.id, 'future');
+
+      if (pastLayer) {
+        const pastUrl = `https://mapservices.weather.noaa.gov/tropical/rest/services/tropical/NHC_tropical_weather/MapServer/${pastLayer}/query?where=1%3D1&outFields=*&f=geojson`;
+        fetch(pastUrl)
+          .then(res => res.json())
+          .then(geojsonData => {
+            if (geojsonData.features && geojsonData.features.length > 0) {
+              const rawCoordinates = geojsonData.features[0].geometry.coordinates;
+              const cleanCoords = rawCoordinates.map(coord => ({ lat: coord[1], lng: coord[0] }));
+              
+              this.setState(prevState => ({
+                pastTracks: { ...prevState.pastTracks, [storm.id]: cleanCoords }
+              }));
+            }
+          })
+          .catch(err => console.error(`Error fetching past track for ${storm.id}:`, err));
+      }
+
+      if (futureLayer) {
+        const futureUrl = `https://mapservices.weather.noaa.gov/tropical/rest/services/tropical/NHC_tropical_weather/MapServer/${futureLayer}/query?where=1%3D1&outFields=*&f=geojson`;
+        fetch(futureUrl)
+          .then(res => res.json())
+          .then(geojsonData => {
+            if (geojsonData.features && geojsonData.features.length > 0) {
+              const rawCoordinates = geojsonData.features[0].geometry.coordinates;
+              const cleanCoords = rawCoordinates.map(coord => ({ lat: coord[1], lng: coord[0] }));
+              
+              this.setState(prevState => ({
+                futureTracks: { ...prevState.futureTracks, [storm.id]: cleanCoords }
+              }));
+            }
+          })
+          .catch(err => console.error(`Error fetching future track for ${storm.id}:`, err));
+      }
+    });
+  }
 
   componentDidMount () {
     // fetch hurricane data from NOAA
@@ -29,6 +128,7 @@ class CaneReports extends Component {
     // this is circumvented using Moesif Origin & CORS Changer which is a plugin that allows you to send cross-domain requests. 
     // You can also override Request Origin and CORS headers. 
     // This must be turned on. Make sure blue on flag is shown on extension bar
+    // Added hurricane track fetch to plot past and future tracks. 7/2/2026
     fetch(H_URL)
     .then(resp => resp.json())
     .then(caneResp => {
@@ -37,6 +137,9 @@ class CaneReports extends Component {
         centerGPS: this.props.gps,
         filterHtsReports: this.props.c_reports,
         sizeFilter: "All"
+      }, () => {
+        // Kick off track downloads immediately once active storms load into state
+        this.fetchStormTracks(caneResp.activeStorms);
       })
     })
   }
@@ -105,7 +208,7 @@ class CaneReports extends Component {
         <Navbar/>
         <Menu inverted color='grey' size='mini'>
         <Menu.Item>
-        <Label size='large' color='grey'> 
+        <Label size='large' color='orange'> 
         <Icon name='lightning'/>
         {this.props.c_reports.length > 0 ? " Active cyclones" : "No active cyclones!"}
         </Label> 
@@ -113,8 +216,9 @@ class CaneReports extends Component {
         {this.props.c_reports.length > 0 ?
         <Menu.Item>
           <Popup content='Show only hurricanes and tropical storms' trigger={<Checkbox 
+              toggle
               checked={this.state.htsOnly}
-              label='Hurricanes/TS'
+              label={{ children: 'Hurricanes/Tropical Storms Only', style: { color: 'white' } }}
               onClick={this.handleHtsOnly}
           /> } />
           </Menu.Item> : null}
@@ -163,7 +267,14 @@ class CaneReports extends Component {
         </Modal>
 
         </Menu>
-        <MapCaneReports c_reports={this.state.filterHtsReports} gps={this.props.user.gps}/>
+        {/* Pass the track state records down via props to the map layout */}
+        <MapCaneReports 
+          c_reports={this.state.filterHtsReports} 
+          gps={this.props.user.gps}
+          pastTracks={this.state.pastTracks}
+          futureTracks={this.state.futureTracks}
+          conePolygons={this.state.conePolygons}
+        />
       </div>
     )
   }

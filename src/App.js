@@ -6,6 +6,8 @@ import Login from './components/Login'
 import Signup from './components/Signup'
 import Reports from './components/Reports'
 import CaneReports from './components/CaneReports'
+import FireReports from './components/FireReports'
+
 
 const App = () => {
   return (
@@ -16,6 +18,7 @@ const App = () => {
         <Route path={'/signup'} component={Signup}/>
         <Route path={'/reports'} component={Reports} />
         <Route path={'/hurricanes'} component={CaneReports} />
+        <Route path={'/wildfires'} component={FireReports} />
         <Route path={'/'} component={Login} />
       </Switch>
       </BrowserRouter>
