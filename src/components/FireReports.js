@@ -15,13 +15,12 @@ class FireReports extends Component {
   handleLargeFiresToggle = (e, { checked }) => {
   this.setState({ largeFiresOnly: checked });
 }
-
-  // Dedicated dynamic fetch pipeline for wildfire locations
+// Dedicated dynamic fetch pipeline for wildfire locations and perimeter geometries
   fetchActiveWildfires = () => {
     const params = new URLSearchParams({
       where: "poly_GISAcres >= 100",
-      //outFields: "OBJECTID,poly_IncidentName,poly_GISAcres",
       outFields: "OBJECTID,poly_IncidentName,poly_GISAcres,attr_PercentContained",
+      outSR: "4326",
       f: "geojson"
     });
 
@@ -37,27 +36,40 @@ class FireReports extends Component {
           const firePins = geojsonData.features.map(feature => {
             if (!feature.geometry || !feature.geometry.coordinates) return null;
 
-            // Drill down to pull just the very first [Lng, Lat] pair to serve as the pin anchor
-            const isMulti = feature.geometry.type === 'MultiPolygon';
-            const firstCoord = isMulti ? feature.geometry.coordinates[0][0][0] : feature.geometry.coordinates[0][0];
+            const { type, coordinates } = feature.geometry;
+            let allRings = []; // Will hold array of rings: [ [{lat, lng}, ...], [{lat, lng}, ...] ]
 
-            if (!firstCoord) return null;
+            if (type === 'Polygon') {
+              // Standard Polygon: coordinates is [ [ [lng, lat], ... ] ]
+              allRings = coordinates.map(ring => 
+                ring.map(coord => ({ lat: coord[1], lng: coord[0] }))
+              );
+            } else if (type === 'MultiPolygon') {
+              // MultiPolygon: coordinates is [ [ [ [lng, lat], ... ] ], [ [ [lng, lat], ... ] ] ]
+              allRings = coordinates.map(poly => 
+                poly[0].map(coord => ({ lat: coord[1], lng: coord[0] }))
+              );
+            }
+
+            if (!allRings || !allRings.length || !allRings[0].length) return null;
+
+            // Anchor the marker pin at the first coordinate of the first ring
+            const firstCoord = allRings[0][0];
 
             return {
               id: feature.properties.OBJECTID,
               name: feature.properties.poly_IncidentName || "Active Wildfire",
               acres: Math.round(feature.properties.poly_GISAcres || 0),
-              // 2. Extract containment (fallback to null if unpopulated)
               containment: feature.properties.attr_PercentContained ?? feature.properties.poly_PercentContained ?? null,
-              position: { lat: firstCoord[1], lng: firstCoord[0] } // Google Maps shape: {lat, lng}
+              position: firstCoord,
+              perimeterRings: allRings // Store ALL polygon rings
             };
-          }).filter(Boolean); // Clear out any null records safely
+          }).filter(Boolean);
 
-          // Send firePins array straight to your Redux global state store
           this.props.addFireReport(firePins);
         }
       })
-      .catch(err => console.error("Error fetching fire pins:", err));
+      .catch(err => console.error("Error fetching fire perimeters:", err));
   }
 
   componentDidMount() {

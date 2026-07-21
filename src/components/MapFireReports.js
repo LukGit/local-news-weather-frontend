@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Map, Marker, GoogleApiWrapper, InfoWindow } from 'google-maps-react'; // Removed Polyline/Polygon
+import { Map, Marker, GoogleApiWrapper, InfoWindow, Polygon } from 'google-maps-react'; // added Polygon
 import fire16 from '../img/fire16.png';
 import fire32 from '../img/fire32.png';
 import fire48 from '../img/fire48.png';
@@ -17,7 +17,8 @@ export class MapFireReports extends Component {
     showInfo: false,
     fireName: "",
     fireAcres: 0,
-    fireContain: 0
+    fireContain: 0,
+    currentZoom: 5 // ADDED: Track zoom level (defaults to initial map zoom)
   }
   
   componentDidMount () {
@@ -26,6 +27,13 @@ export class MapFireReports extends Component {
     });
   }
   
+  // ADDED: Listener to capture zoom changes dynamically
+  handleZoomChanged = (mapProps, map) => {
+    if (map) {
+      this.setState({ currentZoom: map.getZoom() });
+    }
+  }
+
   // Custom click handler for Wildfires
   handleMarkerClick = (props, marker, e) => {
     this.setState({
@@ -57,6 +65,8 @@ export class MapFireReports extends Component {
   };
 
   render() {
+    // Show detailed boundary polygons only when zoomed into localized region (Zoom >= 9)
+    const showPerimeters = this.state.currentZoom >= 9;
     return (
       <Map 
         google={this.props.google} 
@@ -64,20 +74,42 @@ export class MapFireReports extends Component {
         initialCenter={{lat: 39.8283, lng: -98.5795}} // Adjusted to center of the US
         center={this.state.recenterGPS}
         onClick={this.onMapClick}
+        onZoomChanged={this.handleZoomChanged} // ADDED: Zoom event listener
       >
+        {/* ADDED: Burn Perimeter Layer (Renders only when zoomed in >= 9) */}
+        {/* Burn Perimeter Layer (Renders all rings for MultiPolygon fires) */}
+        {showPerimeters && this.props.f_reports && this.props.f_reports.map(fire => {
+          if (!fire.perimeterRings || fire.perimeterRings.length === 0) return null;
+
+          return fire.perimeterRings.map((ringCoords, ringIdx) => (
+            <Polygon
+              key={`perimeter-${fire.id}-ring-${ringIdx}`}
+              paths={ringCoords}
+              strokeColor="#dc2626"   // Solid dark red border
+              strokeOpacity={0.8}
+              strokeWeight={2}
+              fillColor="#ef4444"     // Translucent red fill
+              fillOpacity={0.25}
+              geodesic={true}
+            />
+          ));
+        })}
+
         {/* Render Wildfire Markers */}
         {this.props.f_reports && this.props.f_reports.map(fire => {
-          
+          const containment = fire.containment ?? 0;
+          const activeAcres = fire.acres * (1 - (containment / 100));
+
           // Dynamic 4-tier icon sizing logic
           let selectedIcon = fire16; // Default: Minor (< 1,000 acres)
   
-          if (fire.acres >= 100000) {
+          if (activeAcres >= 100000) {
             selectedIcon = fire96;   // 🆕 The Santa Ana / Mega-Fire Tier
-          } else if (fire.acres >= 30000) {
+          } else if (activeAcres >= 30000) {
             selectedIcon = fire64;   
-          } else if (fire.acres >= 10000) {
+          } else if (activeAcres >= 10000) {
             selectedIcon = fire48;   
-          } else if (fire.acres >= 1000) {
+          } else if (activeAcres >= 1000) {
             selectedIcon = fire32;   
           }
           const iconOpacity = this.getOpacity(fire.containment);
