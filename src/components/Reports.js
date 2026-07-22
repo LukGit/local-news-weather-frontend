@@ -69,7 +69,7 @@ class Reports extends Component {
         <Menu.Item>
         <Label size='large' color='orange'> 
         <Icon name='lightning'/>
-        {this.props.reports.length > 0 ? "Significant eqrthquakes in the past 72hrs" : "No Earthquake In Last 72hrs!"}
+        {this.props.reports.length > 0 ? ` Significant eqrthquakes in the past 72hrs: ${this.props.reports.length}` : "No Earthquake In Last 72hrs!"}
         </Label> 
         </Menu.Item>
         {this.props.reports.length > 0 ?

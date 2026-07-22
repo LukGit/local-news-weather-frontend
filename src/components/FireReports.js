@@ -18,7 +18,7 @@ class FireReports extends Component {
 // Dedicated dynamic fetch pipeline for wildfire locations and perimeter geometries
   fetchActiveWildfires = () => {
     const params = new URLSearchParams({
-      where: "poly_GISAcres >= 100",
+      where: "poly_GISAcres >= 500",
       outFields: "OBJECTID,poly_IncidentName,poly_GISAcres,attr_PercentContained",
       outSR: "4326",
       f: "geojson"

@@ -228,7 +228,7 @@ class CaneReports extends Component {
         <Menu.Item>
         <Label size='large' color='orange'> 
         <Icon name='lightning'/>
-        {this.props.c_reports.length > 0 ? " Active cyclones" : "No active cyclones!"}
+        {this.props.c_reports.length > 0 ? ` Active cyclones: ${this.props.c_reports.length}` : "No active cyclones!"}
         </Label> 
         </Menu.Item>
         {this.props.c_reports.length > 0 ?
