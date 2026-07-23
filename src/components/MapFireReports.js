@@ -109,7 +109,7 @@ export class MapFireReports extends Component {
             selectedIcon = fire64;   
           } else if (activeAcres >= 10000) {
             selectedIcon = fire48;   
-          } else if (activeAcres >= 1000) {
+          } else if (activeAcres >= 3000) {
             selectedIcon = fire32;   
           }
           const iconOpacity = this.getOpacity(fire.containment);
