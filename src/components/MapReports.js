@@ -13,7 +13,7 @@ export class MapReports extends Component {
   state = {
     centerGPS: this.props.gps,
     filterReports: [],
-    recenterGPS: {},
+    recenterGPS: null,
     qMarker: "",
     showInfo: false,
     quakePl: "",
@@ -34,6 +34,7 @@ export class MapReports extends Component {
 handleClick = (props, marker, e) => {
     // this set the detail information of the quake and turn on the infowindow
     const quake = this.props.reports.find(r => r.id === props.name)
+    if (!quake) return;
     const Q_URL = quake.properties.detail
     fetch(Q_URL)
     .then(resp => resp.json())
@@ -43,30 +44,36 @@ handleClick = (props, marker, e) => {
       // Note: USGS GeoJSON coordinates arrays are ordered as [Longitude, Latitude, Depth]
       const epicenterLng = quake.geometry.coordinates[0];
       const epicenterLat = quake.geometry.coordinates[1];
-      
-      const distanceFromHome = this.calculateDistance(
-        this.props.gps.lat,
-        this.props.gps.lng,
-        epicenterLat,
-        epicenterLng
-      );
+      // Safely read user GPS from centerGPS or gps prop with optional chaining
+      const userLat = this.props.centerGPS?.lat || this.props.gps?.lat;
+      const userLng = this.props.centerGPS?.lng || this.props.gps?.lng;
 
+      // Only calculate distance if user location is valid
+      let distanceFromHome = null;
+      if (userLat && userLng) {
+        distanceFromHome = this.calculateDistance(
+          userLat,
+          userLng,
+          epicenterLat,
+          epicenterLng
+        );
+      }
       this.setState({
+        qMarker: marker,
+        showInfo: true,
         quakePl: quake.properties.place,
         quakeMag: quake.properties.mag,
-        qMarker: marker,
-        quakeDate: quakeResp.properties.products.origin[0].properties.eventtime,
-        quakeAlert: quakeResp.properties.alert,
-        quakeLink: quakeResp.properties.url,
-        quakeDepth: quakeResp.geometry.coordinates[2],
-        showInfo: true,
-        
-        // NEW ADDITIONS: Save the parsed metrics safely into your state keys
+        quakeDate: new Date(quake.properties.time).toLocaleString(),
+        quakeAlert: quake.properties.alert,
+        quakeLink: quake.properties.url,
+        quakeDepth: quake.geometry.coordinates[2],
         quakeDistance: distanceFromHome,
-        quakeFeltCount: quakeResp.properties.felt,      // API returns null if no one reported yet
-        quakeTsunamiFlag: quakeResp.properties.tsunami  // API returns 0 or 1
-      })
+        quakeFeltCount: quakeResp.properties.felt,
+        quakeTsunamiFlag: quakeResp.properties.tsunami,
+        recenterGPS: { lat: epicenterLat, lng: epicenterLng }
+      });     
     })
+    .catch(err => console.error("Error fetching detail:", err));
 }
   
   onMapClick = (props) => {
@@ -132,8 +139,9 @@ handleClick = (props, marker, e) => {
     return (
       <Map google={this.props.google} 
       zoom={3}
-      initialCenter={this.state.centerGPS}
-      center={this.state.recenterGPS}
+      initialCenter={this.props.centerGPS}
+      /* Dynamic re-centering: uses click recenter if active, otherwise uses updated GPS */
+      center={this.state.recenterGPS || this.props.centerGPS}
       onClick={this.onMapClick}
       >
         {this.props.reports.map(r => {

@@ -7,6 +7,7 @@ import { Label, Icon, Menu, Checkbox, Popup } from 'semantic-ui-react'
 
 class Reports extends Component {
   state = {
+    centerGPS: {lat: 41.8781, lng: -87.6298},
     poopSizeSelect: "",
     filterReports: [],
     largeOnly: false,
@@ -21,6 +22,27 @@ class Reports extends Component {
   }
 
   componentDidMount () {
+    if (navigator.geolocation) {
+    console.log("Requesting HTML5 Geolocation...");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        console.log("GPS Success:", position.coords.latitude, position.coords.longitude);
+        this.setState({
+          centerGPS: {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          }
+        });
+      },
+      (error) => {
+        console.error("GPS Failed/Denied, code:", error.code, "message:", error.message);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  } else {
+    console.warn("Geolocation is not supported by this browser.");
+  }
+
     // fetch earthquake data from USGS
     const date1 = new Date()
     date1.setDate(date1.getDate() + 1)
@@ -58,10 +80,6 @@ class Reports extends Component {
   }
   // this shows the NavBar and the MapReports which is also passed the report items to display on map
   render() {
-    if (!this.props.user.user){
-      this.props.history.push('/login')
-      return null
-    }
     return (
       <div>
         <Navbar/>
@@ -82,7 +100,9 @@ class Reports extends Component {
           }/>
           </Menu.Item> : null}
         </Menu>
-        <MapReports reports={this.state.filterReports} zipcode={this.props.user.zipcode} gps={this.props.user.gps}/>
+        <MapReports 
+        reports={this.state.filterReports.length > 0 ? this.state.filterReports : this.props.reports} 
+        centerGPS={this.state.centerGPS} />
       </div>
     )
   }

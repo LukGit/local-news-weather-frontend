@@ -73,22 +73,10 @@ class FireReports extends Component {
   }
 
   componentDidMount() {
-    // Check authentication first before triggering network traffic
-    if (this.props.user.user) {
-      this.setState({
-        centerGPS: this.props.user.gps
-      });
-      // Fire off the API call directly on mount
-      this.fetchActiveWildfires();
-    }
+    this.fetchActiveWildfires();
   }
 
   render() {
-    // Route guard checking global user authentication state
-    if (!this.props.user.user){
-      this.props.history.push('/login');
-      return null;
-    }
     const displayedFires = this.state.largeFiresOnly 
     ? this.props.f_reports.filter(fire => fire.acres >= 30000)
     : this.props.f_reports;

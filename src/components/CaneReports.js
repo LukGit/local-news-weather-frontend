@@ -158,6 +158,7 @@ class CaneReports extends Component {
       }, () => {
         // Kick off track downloads immediately once active storms load into state
         this.fetchStormTracks(caneResp.activeStorms);
+        
       })
     })
   }
@@ -175,9 +176,17 @@ class CaneReports extends Component {
     })
   }
 
-  getWeather = (zip) => {
+  getWeather = () => {
+    // Grab GPS coordinates from Redux state (or fallback)
+    const gps = this.props.user.gps || { lat: 22.3193, lng: 114.1694 };
+  
+    // Format location string as "latitude,longitude"
+    const locationParam = `${gps.lat},${gps.lng}`;
+
     // api key in .env file
-    const W_URL = "https://api.weatherapi.com/v1/forecast.json?key=" + process.env.REACT_APP_WEATHER_API_KEY + "&days=2&q=" + zip
+    const W_URL = "https://api.weatherapi.com/v1/forecast.json?key=" + 
+      process.env.REACT_APP_WEATHER_API_KEY + 
+      "&days=2&q=" + locationParam;
     fetch(W_URL)
     .then(resp => resp.json())
     .then(weatherResp => {
@@ -217,10 +226,6 @@ class CaneReports extends Component {
   }
   // this shows the NavBar and the MapReports which is also passed the report items to display on map
   render() {
-    if (!this.props.user.user){
-      this.props.history.push('/login')
-      return null
-    }
     return (
       <div>
         <Navbar/>
