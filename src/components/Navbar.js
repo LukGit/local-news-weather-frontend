@@ -18,19 +18,19 @@ class Navbar extends Component {
 
   render() {
     return (
-      <Menu inverted color='brown' size='mini'>
-        <Menu.Item >
-          <Link to={'/reports'} className="item">
+      <Menu id="menu-head" color="teal" size="mini" inverted style={{ margin: 0, borderRadius: 0, flexShrink: 0, minHeight: 'auto'}}>
+        <Menu.Item style={{ paddingTop: '8px', paddingBottom: '8px' }}>
+          <Link to={'/reports'} className="item" style={{ fontSize: '1.0rem' }}>
             Earthquakes
           </Link>
         </Menu.Item>
-        <Menu.Item >
-          <Link to={'/hurricanes'} className="item">
+        <Menu.Item style={{ paddingTop: '8px', paddingBottom: '8px' }}>
+          <Link to={'/hurricanes'} className="item" style={{ fontSize: '1.0rem' }}>
             Hurricanes
           </Link>
         </Menu.Item>
-        <Menu.Item >
-          <Link to={'/wildfires'} className="item">
+        <Menu.Item style={{ paddingTop: '8px', paddingBottom: '8px' }}>
+          <Link to={'/wildfires'} className="item" style={{ fontSize: '1.0rem' }}>
             Wildfires
           </Link>
         </Menu.Item>

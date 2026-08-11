@@ -81,9 +81,9 @@ class Reports extends Component {
   // this shows the NavBar and the MapReports which is also passed the report items to display on map
   render() {
     return (
-      <div>
-        <Navbar/>
-        <Menu inverted color='grey' size='mini'>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
+        <Navbar />
+        <Menu inverted color='grey' size='mini' style={{ margin: 0, borderRadius: 0, flexShrink: 0, minHeight: 'auto'}}>
         <Menu.Item>
         <Label size='large' color='orange'> 
         <Icon name='lightning'/>
@@ -100,9 +100,11 @@ class Reports extends Component {
           }/>
           </Menu.Item> : null}
         </Menu>
+        <div style={{ flex: 1, position: 'relative', width: '100%' }}>
         <MapReports 
         reports={this.state.filterReports.length > 0 ? this.state.filterReports : this.props.reports} 
         centerGPS={this.state.centerGPS} />
+        </div>
       </div>
     )
   }

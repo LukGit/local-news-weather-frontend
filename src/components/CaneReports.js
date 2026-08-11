@@ -227,9 +227,9 @@ class CaneReports extends Component {
   // this shows the NavBar and the MapReports which is also passed the report items to display on map
   render() {
     return (
-      <div>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
         <Navbar/>
-        <Menu inverted color='grey' size='mini'>
+        <Menu inverted color='grey' size='mini' style={{ margin: 0, borderRadius: 0, flexShrink: 0, minHeight: 'auto'}}>
         <Menu.Item>
         <Label size='large' color='orange'> 
         <Icon name='lightning'/>
@@ -291,6 +291,7 @@ class CaneReports extends Component {
 
         </Menu>
         {/* Pass the track state records down via props to the map layout */}
+        <div style={{ flex: 1, position: 'relative', width: '100%' }}>
         <MapCaneReports 
           c_reports={this.state.filterHtsReports} 
           gps={this.props.user.gps}
@@ -298,6 +299,7 @@ class CaneReports extends Component {
           futureTracks={this.state.futureTracks}
           conePolygons={this.state.conePolygons}
         />
+        </div>
       </div>
     )
   }

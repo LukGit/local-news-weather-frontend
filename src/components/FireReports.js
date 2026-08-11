@@ -82,9 +82,9 @@ class FireReports extends Component {
     : this.props.f_reports;
 
     return (
-      <div>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
         <Navbar/>
-        <Menu inverted color='grey' size='mini'>
+        <Menu inverted color='grey' size='mini' style={{ margin: 0, borderRadius: 0, flexShrink: 0, minHeight: 'auto'}}>
           <Menu.Item>
             <Label size='large' color='orange'> {/* Changed color to orange for visual thematic consistency */}
               <Icon name='fire'/> {/* Swap out lightning icon for a fire icon */}
@@ -101,12 +101,13 @@ class FireReports extends Component {
           />
         </Menu.Item>
         </Menu>
-        
+        <div style={{ flex: 1, position: 'relative', width: '100%' }}>
         {/* Render canvas passing down only the coordinates and configurations needed for pins */}
         <MapFireReports 
           f_reports={displayedFires} 
           gps={this.props.user.gps}
         />
+        </div>
       </div>
     );
   }
