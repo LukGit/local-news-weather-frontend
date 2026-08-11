@@ -86,7 +86,7 @@ class Reports extends Component {
         <Menu inverted color='grey' size='mini' style={{ margin: 0, borderRadius: 0, flexShrink: 0, minHeight: 'auto'}}>
         <Menu.Item>
         <Label size='large' color='orange'> 
-        <Icon name='lightning'/>
+        <Icon name='warning sign'/>
         {this.props.reports.length > 0 ? ` Significant eqrthquakes in the past 72hrs: ${this.props.reports.length}` : "No Earthquake In Last 72hrs!"}
         </Label> 
         </Menu.Item>
