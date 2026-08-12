@@ -5,6 +5,19 @@ import MapFireReports from './MapFireReports';
 import { addFireReport } from '../actions'; // Corrected action import
 import { Label, Icon, Menu, Checkbox } from 'semantic-ui-react';
 
+const getDaysBurning = (timestamp) => {
+  if (!timestamp || isNaN(timestamp)) return "Unknown";
+
+  const now = Date.now();
+  const diffInMs = now - timestamp;
+  const days = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+  if (days < 0) return "Just started";
+  if (days < 1) return "Started today";
+  if (days === 1) return "1 day";
+  return `${days} days`;
+};
+
 class FireReports extends Component {
   state = {
     sizeFilter: "All",
@@ -19,7 +32,8 @@ class FireReports extends Component {
   fetchActiveWildfires = () => {
     const params = new URLSearchParams({
       where: "poly_GISAcres >= 500",
-      outFields: "OBJECTID,poly_IncidentName,poly_GISAcres,attr_PercentContained",
+      // Added attr_FireDiscoveryDateTime to outFields:
+      outFields: "OBJECTID,poly_IncidentName,poly_GISAcres,attr_PercentContained,attr_FireDiscoveryDateTime",
       outSR: "4326",
       f: "geojson"
     });
@@ -61,6 +75,8 @@ class FireReports extends Component {
               name: feature.properties.poly_IncidentName || "Active Wildfire",
               acres: Math.round(feature.properties.poly_GISAcres || 0),
               containment: feature.properties.attr_PercentContained ?? feature.properties.poly_PercentContained ?? null,
+              discoveryDate: feature.properties.poly_IncidentDiscoveryDateTime || null,
+              daysBurning: getDaysBurning(feature.properties.attr_FireDiscoveryDateTime),
               position: firstCoord,
               perimeterRings: allRings // Store ALL polygon rings
             };

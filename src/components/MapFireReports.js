@@ -18,6 +18,7 @@ export class MapFireReports extends Component {
     fireName: "",
     fireAcres: 0,
     fireContain: 0,
+    fireDuration: 0,
     currentZoom: 5 // ADDED: Track zoom level (defaults to initial map zoom)
   }
   
@@ -40,6 +41,7 @@ export class MapFireReports extends Component {
       fireName: props.fire.name,
       fireAcres: props.fire.acres,
       fireContain: props.fire.containment,
+      fireDuration: props.fire.daysBurning,
       activeMarker: marker,
       showInfo: true,
       recenterGPS: props.position // Centers map on the fire when clicked
@@ -65,7 +67,7 @@ export class MapFireReports extends Component {
   };
 
   render() {
-    // Show detailed boundary polygons only when zoomed into localized region (Zoom >= 9)
+    // Show detailed boundary polygons only when zoomed into localized region (Zoom >= 9) 
     const showPerimeters = this.state.currentZoom >= 9;
     return (
       <Map 
@@ -142,6 +144,14 @@ export class MapFireReports extends Component {
                 <Item.Header>Acres Burned</Item.Header>
                 <Item.Description>
                   {this.state.fireAcres ? this.state.fireAcres.toLocaleString() : "Unknown"}
+                </Item.Description>
+              </Item.Content>
+            </Item>  
+            <Item>
+              <Item.Content>
+                <Item.Header>Days Burning</Item.Header>
+                <Item.Description>
+                  {this.state.fireDuration ? this.state.fireDuration : "Unknown"}
                 </Item.Description>
               </Item.Content>
             </Item>  
