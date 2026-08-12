@@ -71,15 +71,15 @@ class Reports extends Component {
   }
 
   handleMg = (e) => {
-    let filterY = []
-    filterY = this.props.reports.filter(r => r.properties.mag >= e.target.value)
-    this.setState({
-      mg: e.target.value,
-      filterReports: filterY
-    })
-  }
+  this.setState({
+    mg: Number(e.target.value) // Ensure value is a number for clean comparison
+  });
+}
   // this shows the NavBar and the MapReports which is also passed the report items to display on map
   render() {
+    const displayedReports = this.props.reports.filter(
+    r => r.properties.mag >= this.state.mg
+    );
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
         <Navbar />
@@ -102,7 +102,7 @@ class Reports extends Component {
         </Menu>
         <div style={{ flex: 1, position: 'relative', width: '100%' }}>
         <MapReports 
-        reports={this.state.filterReports.length > 0 ? this.state.filterReports : this.props.reports} 
+        reports={displayedReports}  
         centerGPS={this.state.centerGPS} />
         </div>
       </div>
