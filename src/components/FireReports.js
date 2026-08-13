@@ -18,6 +18,29 @@ const getDaysBurning = (timestamp) => {
   return `${days} days`;
 };
 
+// Helper to format suppression costs into compact currency (e.g., $1.5M, $442K)
+const formatFireCost = (cost) => {
+  if (!cost || isNaN(cost) || cost === 0) return "N/A";
+
+  // ⚡ Add Billions handler
+  if (cost >= 1000000000) {
+    const billions = (cost / 1000000000).toFixed(1);
+    return `$${billions.replace(/\.0$/, '')}B`;
+  }
+
+  if (cost >= 1000000) {
+    const millions = (cost / 1000000).toFixed(1);
+    return `$${millions.replace(/\.0$/, '')}M`;
+  }
+
+  if (cost >= 1000) {
+    return `$${Math.round(cost / 1000)}K`;
+  }
+
+  return `$${cost.toLocaleString()}`;
+};
+
+
 class FireReports extends Component {
   state = {
     sizeFilter: "All",
@@ -33,7 +56,7 @@ class FireReports extends Component {
     const params = new URLSearchParams({
       where: "poly_GISAcres >= 500",
       // Added attr_FireDiscoveryDateTime to outFields:
-      outFields: "OBJECTID,poly_IncidentName,poly_GISAcres,attr_PercentContained,attr_FireDiscoveryDateTime",
+      outFields: "OBJECTID,poly_IncidentName,poly_GISAcres,attr_PercentContained,attr_FireDiscoveryDateTime,attr_EstimatedCostToDate,attr_EstimatedFinalCost",
       outSR: "4326",
       f: "geojson"
     });
@@ -69,6 +92,10 @@ class FireReports extends Component {
 
             // Anchor the marker pin at the first coordinate of the first ring
             const firstCoord = allRings[0][0];
+            // Inside your fetchActiveWildfires .map() loop:
+            const rawCostToDate = feature.properties.attr_EstimatedCostToDate || 0;
+            // Safety net: ensure total is at least as big as the current cost
+            const rawFinalCost = Math.max(rawCostToDate, feature.properties.attr_EstimatedFinalCost || 0);
 
             return {
               id: feature.properties.OBJECTID,
@@ -77,6 +104,11 @@ class FireReports extends Component {
               containment: feature.properties.attr_PercentContained ?? feature.properties.poly_PercentContained ?? null,
               discoveryDate: feature.properties.poly_IncidentDiscoveryDateTime || null,
               daysBurning: getDaysBurning(feature.properties.attr_FireDiscoveryDateTime),
+              // ⚡ Cost Data 
+              costToDate: formatFireCost(rawCostToDate),
+              finalCost: formatFireCost(rawFinalCost),
+              rawCostToDate: rawCostToDate,
+              rawFinalCost: rawFinalCost,
               position: firstCoord,
               perimeterRings: allRings // Store ALL polygon rings
             };
@@ -96,6 +128,9 @@ class FireReports extends Component {
     const displayedFires = this.state.largeFiresOnly 
     ? this.props.f_reports.filter(fire => fire.acres >= 30000)
     : this.props.f_reports;
+  // ⚡ Tally up the raw integers across all currently displayed fires
+    const totalSpent = displayedFires.reduce((sum, fire) => sum + (fire.rawCostToDate || 0), 0);
+    const totalBudget = displayedFires.reduce((sum, fire) => sum + (fire.rawFinalCost || 0), 0);
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
@@ -107,6 +142,13 @@ class FireReports extends Component {
               {this.props.f_reports.length > 0 ? ` Active fires: ${this.props.f_reports.length}` : "No active fires!"}
             </Label> 
           </Menu.Item>
+          {/* ⚡ NEW: Display Aggregate Costs next to the fire count */}
+        <Menu.Item>
+          <div size='large' style={{ color: 'orange', fontWeight: 'bold', paddingLeft: '10px', fontSize: '1.0rem' }}>
+            <Icon name='dollar sign' />
+            Operations Budget: {formatFireCost(totalSpent)} / {formatFireCost(totalBudget)}
+          </div>
+        </Menu.Item>
           {/* ADD THE CHECKBOX INTERFACE ITEM RIGHT HERE */}
         <Menu.Item>
           <Checkbox 

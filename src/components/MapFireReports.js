@@ -7,7 +7,7 @@ import fire64 from '../img/fire64.png';
 import fire96 from '../img/fire96.png';
 
 import { withRouter } from 'react-router-dom';
-import { Item } from 'semantic-ui-react';
+import { Item, Progress } from 'semantic-ui-react';
 
 export class MapFireReports extends Component {
   state = {
@@ -19,6 +19,8 @@ export class MapFireReports extends Component {
     fireAcres: 0,
     fireContain: 0,
     fireDuration: 0,
+    costToDate: 0,
+    finalCost: 0,
     currentZoom: 5 // ADDED: Track zoom level (defaults to initial map zoom)
   }
   
@@ -43,6 +45,11 @@ export class MapFireReports extends Component {
       fireContain: props.fire.containment,
       fireDuration: props.fire.daysBurning,
       activeMarker: marker,
+      // ⚡ Add cost metrics to state
+      costToDate: props.fire.costToDate,
+      finalCost: props.fire.finalCost,
+      rawCostToDate: props.fire.rawCostToDate,
+      rawFinalCost: props.fire.rawFinalCost,
       showInfo: true,
       recenterGPS: props.position // Centers map on the fire when clicked
     });
@@ -165,6 +172,21 @@ export class MapFireReports extends Component {
                 </Item.Description>
               </Item.Content>
             </Item>  
+            {/* Render the Progress Bar only if cost data exists */}
+            {this.state.rawFinalCost > 0 ? (
+              <div style={{ marginTop: '15px' }}>
+                <p style={{ marginBottom: '5px', fontSize: '0.9em' }}>
+                  <strong>Used/Budget:</strong> {this.state.costToDate} / {this.state.finalCost}
+                </p>
+                <Progress 
+                  value={this.state.rawCostToDate} 
+                  total={this.state.rawFinalCost} 
+                  color='orange' 
+                  size='tiny' 
+                  style={{ margin: 0 }}
+                />
+              </div>
+            ) : null}
           </Item.Group>
         </InfoWindow>
       </Map>
