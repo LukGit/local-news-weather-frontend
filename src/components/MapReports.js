@@ -233,21 +233,21 @@ handleClick = (props, marker, e) => {
               )}
 
               {/* NEW ITEM: Crowdsourced Reports & Tsunami Beacons */}
-              {(this.state.quakeFeltCount || this.state.quakeTsunamiFlag === 1) && (
-              <Item>
-                <Item.Content>
-                <Item.Header>Real-Time Impact Alerts</Item.Header>
-                <Item.Description>
-                  {this.state.quakeFeltCount ? `💥 Felt by ${this.state.quakeFeltCount} people via "Did You Feel It?"` : ''}
-                  {this.state.quakeTsunamiFlag === 1 && (
-                  <div style={{ color: '#dc2626', fontWeight: 'bold', marginTop: '5px' }}>
-                  ⚠️ WARNING: Tsunami advisory/watch active for this event
-                  </div>
-                )}
+              {(Boolean(this.state.quakeFeltCount) || this.state.quakeTsunamiFlag === 1) && (
+               <Item>
+                 <Item.Content>
+                  <Item.Header>Real-Time Impact Alerts</Item.Header>
+                  <Item.Description>
+                    {this.state.quakeFeltCount ? `💥 Felt by ${this.state.quakeFeltCount.toLocaleString()} people via "Did You Feel It?"` : ''} 
+                    {this.state.quakeTsunamiFlag === 1 && (
+                     <div style={{ color: '#dc2626', fontWeight: 'bold', marginTop: '5px' }}>
+                        ⚠️ WARNING: Tsunami advisory/watch active for this event
+                        </div>
+                    )}
                   </Item.Description>
                   </Item.Content>
                 </Item>
-            )}
+              )}
               </Item.Group>
           </InfoWindow>
       </Map>
