@@ -23,8 +23,7 @@ class Reports extends Component {
 
   componentDidMount () {
     if (navigator.geolocation) {
-    console.log("Requesting HTML5 Geolocation...");
-    navigator.geolocation.getCurrentPosition(
+      navigator.geolocation.getCurrentPosition(
       (position) => {
         console.log("GPS Success:", position.coords.latitude, position.coords.longitude);
         this.setState({

@@ -131,6 +131,12 @@ class FireReports extends Component {
   // ⚡ Tally up the raw integers across all currently displayed fires
     const totalSpent = displayedFires.reduce((sum, fire) => sum + (fire.rawCostToDate || 0), 0);
     const totalBudget = displayedFires.reduce((sum, fire) => sum + (fire.rawFinalCost || 0), 0);
+    // NEW: Find the Most Expensive Fire (by money used)
+    const mostExpensiveFire = displayedFires.reduce((max, fire) => {
+      const currentCost = fire.rawCostToDate || 0;
+      const maxCost = max.rawCostToDate || 0;
+      return currentCost > maxCost ? fire : max;
+    }, displayedFires[0] || {});
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
@@ -163,6 +169,7 @@ class FireReports extends Component {
         {/* Render canvas passing down only the coordinates and configurations needed for pins */}
         <MapFireReports 
           f_reports={displayedFires} 
+          mostExpensiveFireName={mostExpensiveFire.name}
           gps={this.props.user.gps}
         />
         </div>

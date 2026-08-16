@@ -108,7 +108,8 @@ export class MapFireReports extends Component {
         {this.props.f_reports && this.props.f_reports.map(fire => {
           const containment = fire.containment ?? 0;
           const activeAcres = fire.acres * (1 - (containment / 100));
-
+          // NEW: Check if this is the most expensive fire
+          const isMostExpensive = this.props.mostExpensiveFireName === fire.name;
           // Dynamic 4-tier icon sizing logic
           let selectedIcon = fire16; // Default: Minor (< 1,000 acres)
   
@@ -131,6 +132,8 @@ export class MapFireReports extends Component {
               fire={fire} // Passing the custom fire object down to the marker props
               icon={{ url: selectedIcon }} 
               onClick={this.handleMarkerClick} 
+              // NEW: Apply a bouncing animation to the most expensive fire only
+              animation={isMostExpensive ? this.props.google.maps.Animation.BOUNCE : null}
             />
           );
         })}
