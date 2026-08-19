@@ -21,7 +21,8 @@ export class MapFireReports extends Component {
     fireDuration: 0,
     costToDate: 0,
     finalCost: 0,
-    currentZoom: 5 // ADDED: Track zoom level (defaults to initial map zoom)
+    currentZoom: 5, // ADDED: Track zoom level (defaults to initial map zoom)
+    windVectors: []
   }
   
   componentDidMount () {
@@ -73,9 +74,132 @@ export class MapFireReports extends Component {
     return parseFloat(opacity.toFixed(2));
   };
 
+  handleMapIdle = async (mapProps, map) => {
+    // STEP 1: The Zoom Gate
+    // If we are zoomed out (less than 9), clear the wind arrows and stop.
+    if (map.getZoom() < 9) {
+        if (this.state.windVectors.length > 0) {
+            this.setState({ windVectors: [] });
+        }
+        return;
+    }
+
+    // STEP 2: Extract Bounding Box
+    const bounds = map.getBounds();
+    if (!bounds) return;
+
+    const ne = bounds.getNorthEast(); // Top-Right corner
+    const sw = bounds.getSouthWest(); // Bottom-Left corner
+
+    // STEP 3: Generate the 3x3 Grid
+    const latDiff = ne.lat() - sw.lat();
+    const lngDiff = ne.lng() - sw.lng();
+
+    const lats = [];
+    const lngs = [];
+
+    // We slice the screen into thirds and grab the center of each slice (1/6, 3/6, 5/6)
+    for (let i = 1; i <= 5; i += 2) {
+        lats.push(sw.lat() + (latDiff * (i / 6)));
+        lngs.push(sw.lng() + (lngDiff * (i / 6)));
+    }
+
+    // Create the cross-product grid of 9 coordinates
+    const gridPoints = [];
+    lats.forEach(lat => {
+        lngs.forEach(lng => {
+            gridPoints.push({ lat, lng });
+        });
+    });
+
+    //console.log("🌪️ DEBUG: Generated 9 Wind Grid Points:", gridPoints);
+    
+     // STEP 3: The API Fetch (Open-Meteo)
+    // Extract lats and lngs into comma-separated strings for the URL
+    const latString = gridPoints.map(p => p.lat.toFixed(4)).join(',');
+    const lngString = gridPoints.map(p => p.lng.toFixed(4)).join(',');
+    
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latString}&longitude=${lngString}&current=wind_speed_10m,wind_direction_10m&wind_speed_unit=mph`;
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        // STEP 4: Parse and Store Local State
+        // Open-Meteo returns an array of objects for multiple coordinates
+        if (Array.isArray(data)) {
+            const windData = data.map((point) => ({
+                lat: point.latitude,
+                lng: point.longitude,
+                speed: point.current.wind_speed_10m,
+                direction: point.current.wind_direction_10m
+            }));
+
+            this.setState({ windVectors: windData });
+            //console.log("🌪️ DEBUG: Wind Data Saved to State:", windData);
+        }
+    } catch (error) {
+        console.error("Wind fetch failed:", error);
+    }  
+}
   render() {
     // Show detailed boundary polygons only when zoomed into localized region (Zoom >= 9) 
     const showPerimeters = this.state.currentZoom >= 9;
+
+    const getWindBarbURI = (speedMph, direction) => {
+    const knots = speedMph * 0.868976; // NWS Barbs are strictly measured in knots
+    let rounded = Math.round(knots / 5) * 5;
+    
+    // We use a 60x60 canvas. Center station is at (30,30). Staff points UP (North).
+    let path = "M 30 30 L 30 5"; 
+    let yOffset = 5; // Start drawing feathers near the top of the staff
+    
+    // 50 knots (Triangle pennants)
+    const fifties = Math.floor(rounded / 50);
+    rounded -= fifties * 50;
+    for (let i = 0; i < fifties; i++) {
+        path += ` M 30 ${yOffset} L 40 ${yOffset + 2} L 30 ${yOffset + 6} Z`;
+        yOffset += 7;
+    }
+    
+    // 10 knots (Long feathers)
+    const tens = Math.floor(rounded / 10);
+    rounded -= tens * 10;
+    for (let i = 0; i < tens; i++) {
+        path += ` M 30 ${yOffset} L 40 ${yOffset - 4}`;
+        yOffset += 5;
+    }
+    
+    // 5 knots (Short feathers)
+    const fives = Math.floor(rounded / 5);
+    if (fives > 0) {
+        // NWS Rule: if it's the *only* feather, offset it down the staff slightly
+        if (yOffset === 5) yOffset = 8;
+        path += ` M 30 ${yOffset} L 35 ${yOffset - 3}`;
+    }
+    
+    // If calm (under 3 knots), draw a simple circle station instead of a staff
+    if (knots < 3) {
+        path = "M 30 30 m -4 0 a 4 4 0 1 0 8 0 a 4 4 0 1 0 -8 0"; 
+    }
+
+    // Bake the Open-Meteo direction directly into the SVG transform
+    const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">
+            <g transform="rotate(${direction}, 30, 30)">
+                <path d="${path}" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" />
+                <circle cx="30" cy="30" r="3.5" fill="#FFFFFF" />
+                
+                <path d="${path}" fill="#222222" stroke="#222222" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+                <circle cx="30" cy="30" r="2" fill="#222222" />
+            </g>
+        </svg>
+    `;
+    
+    // Return as a browser-readable Image URI
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg.trim())}`;
+};
+
     return (
       <Map 
         google={this.props.google} 
@@ -84,6 +208,7 @@ export class MapFireReports extends Component {
         center={this.state.recenterGPS}
         onClick={this.onMapClick}
         onZoomChanged={this.handleZoomChanged} // ADDED: Zoom event listener
+        onIdle={this.handleMapIdle} // <--- ADDED HERE
       >
         {/* ADDED: Burn Perimeter Layer (Renders only when zoomed in >= 9) */}
         {/* Burn Perimeter Layer (Renders all rings for MultiPolygon fires) */}
@@ -137,6 +262,24 @@ export class MapFireReports extends Component {
             />
           );
         })}
+         {/* NEW: Wind Vectors Layer */}
+    {this.state.windVectors.map((vector, index) => {
+        // Shift rotation by 180 degrees so the arrow points TO the destination, not FROM the origin
+        const arrowRotation = (vector.direction + 180) % 360;
+
+        return (
+            <Marker 
+                key={`wind-${index}`}
+                position={{ lat: vector.lat, lng: vector.lng }}
+                icon={{
+                    // Call our mathematical SVG generator
+                    url: getWindBarbURI(vector.speed, vector.direction),
+                    // Anchor perfectly on the (30,30) center coordinate
+                    anchor: new this.props.google.maps.Point(30, 30) 
+                }}
+            />
+        )
+    })}
 
         {/* Simplified InfoWindow for Fires */}
         <InfoWindow
