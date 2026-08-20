@@ -5,7 +5,7 @@ import { Route, Switch } from 'react-router-dom'
 import Reports from './components/Reports'
 import CaneReports from './components/CaneReports'
 import FireReports from './components/FireReports'
-
+import TornadoReports from './components/TornadoReports'
 
 const App = () => {
   return (
@@ -15,6 +15,7 @@ const App = () => {
         <Route path={'/reports'} component={Reports} /> {/* This need to be the new default page */}
         <Route path={'/hurricanes'} component={CaneReports} />
         <Route path={'/wildfires'} component={FireReports} />
+        <Route path={'/tornadoes'} component={TornadoReports} />
         <Route path={'/'} component={Reports} />
       </Switch>
       </BrowserRouter>

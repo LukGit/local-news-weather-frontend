@@ -16,29 +16,48 @@ class Navbar extends Component {
     
   }
 
-  render() {
+ render() {
+    // Grab the current path so the menu knows which tab is active
+    const currentPath = window.location.pathname;
+
     return (
-      <Menu id="menu-head" color="teal" size="mini" inverted style={{ margin: 0, borderRadius: 0, flexShrink: 0, minHeight: 'auto'}}>
-        <Menu.Item style={{ paddingTop: '8px', paddingBottom: '8px' }}>
-          <Link to={'/reports'} className="item" style={{ fontSize: '1.0rem' }}>
-            Earthquakes
-          </Link>
+      <Menu id="menu-head" color="teal" size="huge" inverted style={{ margin: 0, borderRadius: 0, flexShrink: 0, minHeight: 'auto'}}>
+        <Menu.Item 
+          as={Link} 
+          to="/reports" 
+          active={currentPath === '/reports'} 
+          color="orange"
+        >
+          Earthquakes
         </Menu.Item>
-        <Menu.Item style={{ paddingTop: '8px', paddingBottom: '8px' }}>
-          <Link to={'/hurricanes'} className="item" style={{ fontSize: '1.0rem' }}>
-            Hurricanes
-          </Link>
+        <Menu.Item 
+          as={Link} 
+          to="/hurricanes" 
+          active={currentPath === '/hurricanes'} 
+          color="orange"
+        >
+          Hurricanes
         </Menu.Item>
-        <Menu.Item style={{ paddingTop: '8px', paddingBottom: '8px' }}>
-          <Link to={'/wildfires'} className="item" style={{ fontSize: '1.0rem' }}>
-            Wildfires
-          </Link>
+        <Menu.Item 
+          as={Link} 
+          to="/tornadoes" 
+          active={currentPath === '/tornadoes'} 
+          color="orange"
+        >
+          Tornadoes
+        </Menu.Item>
+        <Menu.Item 
+          as={Link} 
+          to="/wildfires" 
+          active={currentPath === '/wildfires'} 
+          color="orange"
+        >
+          Wildfires
         </Menu.Item>
       </Menu>
     );
   }
 }
-
 const mapStateToProps = state => {
   return {
     user: state.users

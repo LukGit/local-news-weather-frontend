@@ -76,8 +76,8 @@ export class MapFireReports extends Component {
 
   handleMapIdle = async (mapProps, map) => {
     // STEP 1: The Zoom Gate
-    // If we are zoomed out (less than 9), clear the wind arrows and stop.
-    if (map.getZoom() < 9) {
+    // If we are zoomed out (less than 10), clear the wind arrows and stop.
+    if (map.getZoom() < 10) {
         if (this.state.windVectors.length > 0) {
             this.setState({ windVectors: [] });
         }

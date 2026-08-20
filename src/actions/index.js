@@ -22,3 +22,6 @@ export const setUserGps = (gps) => {
     gps
   };
 };
+export const addTornadoReport = t_reports => {
+    return { type: 'ADD_TORNADO_REPORT', t_reports };
+};
