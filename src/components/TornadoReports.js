@@ -8,7 +8,8 @@ import MapTornadoReports from './MapTornadoReports';
 class TornadoReports extends Component {
   state = {
     centerGPS: { lat: 41.8781, lng: -87.6298 }, 
-    isLoading: true
+    isLoading: true,
+    lastUpdated: null // Add this to track the exact refresh time
   }
   fetchTornadoData = () => {
     this.setState({ isLoading: true });
@@ -21,7 +22,12 @@ class TornadoReports extends Component {
       .then(data => {
         let warnings = data.features || [];
         this.props.addTornadoReport(warnings);
-        this.setState({ isLoading: false });
+        // Capture the exact time the fetch completed successfully
+        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        this.setState({ 
+          isLoading: false,
+          lastUpdated: timestamp
+         });
       })
       .catch(error => {
         console.error("Error fetching NWS Tornado data:", error);
@@ -41,17 +47,31 @@ class TornadoReports extends Component {
           <Menu.Item>
             Warnings in last 24hrs: {this.props.t_reports ? this.props.t_reports.length : 0}
           </Menu.Item>
-          <Button 
-            icon 
-            labelPosition='right' 
-            color="red"
-            onClick={this.fetchTornadoData}
-            loading={this.state.isLoading}
-            disabled={this.state.isLoading}
-          >
-            <Icon name='refresh' />
-            Refresh Threat Data
-          </Button>
+          {/* Everything inside this wrapper gets pushed to the right */}
+          <Menu.Menu position='right'>
+            
+            {/* Visual confirmation of the exact time data was fetched */}
+            {this.state.lastUpdated && (
+              <Menu.Item style={{ color: '#ffb3b3' }}>
+                Updated: {this.state.lastUpdated}
+              </Menu.Item>
+            )}
+
+            <Menu.Item>
+              <Button 
+                color='red' 
+                icon 
+                labelPosition='right' 
+                onClick={this.fetchTornadoData}
+                loading={this.state.isLoading}
+                disabled={this.state.isLoading}
+              >
+                <Icon name='refresh' />
+                Refresh Threat Data
+              </Button>
+            </Menu.Item>
+            
+          </Menu.Menu>
         </Menu>
         <div style={{ flexGrow: 1, position: 'relative' }}>
           <MapTornadoReports t_reports={this.props.t_reports} gps={this.state.centerGPS} />
