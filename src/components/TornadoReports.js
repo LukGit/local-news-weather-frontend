@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Navbar from './Navbar';
 import { addTornadoReport } from '../actions';
-import { Menu } from 'semantic-ui-react';
+import { Menu, Button, Icon } from 'semantic-ui-react';
 import MapTornadoReports from './MapTornadoReports'; 
 
 class TornadoReports extends Component {
@@ -10,22 +10,26 @@ class TornadoReports extends Component {
     centerGPS: { lat: 41.8781, lng: -87.6298 }, 
     isLoading: true
   }
+  fetchTornadoData = () => {
+    this.setState({ isLoading: true });
 
-  componentDidMount() {
-    fetch('https://api.weather.gov/alerts/active?event=Tornado%20Warning,Tornado%20Watch')
+    const past24Hours = new Date(Date.now() - (24 * 60 * 60 * 1000)).toISOString();
+    const hr24URL = `https://api.weather.gov/alerts?event=Tornado%20Warning&start=${past24Hours}`;
+    
+    fetch(hr24URL)
       .then(response => response.json())
       .then(data => {
-        // FIX 1: Change const to let
-        let warnings = data.features || []; 
-        // FIX 2: Send the data to Redux so the map can render it!
-        this.props.addTornadoReport(warnings); 
+        let warnings = data.features || [];
+        this.props.addTornadoReport(warnings);
         this.setState({ isLoading: false });
-          console.log("🌪️ NWS Tornado Warnings Loaded:", warnings.length);
-        })
+      })
       .catch(error => {
         console.error("Error fetching NWS Tornado data:", error);
         this.setState({ isLoading: false });
       });
+  }
+  componentDidMount() {
+    this.fetchTornadoData();
   }
 
   render() {
@@ -35,8 +39,19 @@ class TornadoReports extends Component {
         <Menu id="menu-head" color="red" size="mini" inverted style={{ margin: 0, borderRadius: 0 }}>
           <Menu.Item header>National Tornado Threat Level</Menu.Item>
           <Menu.Item>
-            Active Warnings/Watches: {this.props.t_reports ? this.props.t_reports.length : 0}
+            Warnings in last 24hrs: {this.props.t_reports ? this.props.t_reports.length : 0}
           </Menu.Item>
+          <Button 
+            icon 
+            labelPosition='right' 
+            color="red"
+            onClick={this.fetchTornadoData}
+            loading={this.state.isLoading}
+            disabled={this.state.isLoading}
+          >
+            <Icon name='refresh' />
+            Refresh Threat Data
+          </Button>
         </Menu>
         <div style={{ flexGrow: 1, position: 'relative' }}>
           <MapTornadoReports t_reports={this.props.t_reports} gps={this.state.centerGPS} />

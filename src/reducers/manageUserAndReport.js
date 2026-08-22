@@ -25,8 +25,6 @@ function reportsReducer(state = [], action) {
   switch (action.type) {
     case "ADD_REPORT":
       return [...action.reports];
-   /*  case "LOGOUT":
-      return []; */
     default:
       return state;
   }
@@ -36,8 +34,6 @@ function caneReportsReducer(state = [], action) {
   switch (action.type) {
     case "ADD_CANE_REPORT":
       return [...action.c_reports];
-    /* case "LOGOUT":
-      return []; */
     default:
       return state;
   }
@@ -47,19 +43,26 @@ function fireReportsReducer(state = [], action) {
   switch (action.type) {
     case "ADD_FIRE_REPORT":
       return [...action.f_reports];
-    /* case "LOGOUT":
-      return []; */
     default:
       return state;
   }
 }
 
+function tornadoReportsReducer(state = [], action) {
+  switch (action.type) {
+    case "ADD_TORNADO_REPORT":
+      return [...action.t_reports];
+    default:
+      return state;
+  }
+}
 // 3. COMBINE & EXPORT AT THE BOTTOM
 const rootReducer = combineReducers({
   users: usersReducer,
   reports: reportsReducer,
   c_reports: caneReportsReducer,
-  f_reports: fireReportsReducer
+  f_reports: fireReportsReducer,
+  t_reports: tornadoReportsReducer
 });
 
 export default rootReducer;
