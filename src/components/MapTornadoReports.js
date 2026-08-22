@@ -98,7 +98,7 @@ class MapTornadoReports extends Component {
     const { currentZoom, touchdowns } = this.state;
     const { t_reports, google, gps } = this.props;
       
-    const showDetailedPolygons = currentZoom >= 7;
+    const showDetailedPolygons = currentZoom >= 9;
     //console.log("touchdowns:", touchdowns)
     /**
  * Calculates dynamic opacity based on a 24-hour rolling window.
@@ -135,7 +135,7 @@ const get24HourOpacity = (timestampStr, minOpacity = 0.20) => {
         onClick={this.onMapClick}
         style={{ width: '100%', height: '100%' }}
       >
-      {/* 1. National View (< 7 Zoom): Centroid Markers */}
+      {/* 1. National View (< 9 Zoom): Centroid Markers */}
       {!showDetailedPolygons && t_reports && t_reports.map((report, idx) => {
         const coords = report.geometry && report.geometry.coordinates;
         if (!coords) return null;
@@ -149,7 +149,7 @@ const get24HourOpacity = (timestampStr, minOpacity = 0.20) => {
           <Marker
             key={`centroid-${idx}`}
             position={center}
-            title={report.properties.headline || eventType}
+            title={report.properties.areaDesc || eventType}
             icon={{
                 url: warningS,
              }}
@@ -163,7 +163,7 @@ const get24HourOpacity = (timestampStr, minOpacity = 0.20) => {
         );
       })}
 
-      {/* 2. Regional View (>= 7 Zoom): Warning Polygons */}
+      {/* 2. Regional View (>= 9 Zoom): Warning Polygons */}
       {showDetailedPolygons && t_reports && t_reports.map((report, idx) => {
         if (!report.geometry || !report.geometry.coordinates) return null;   
         
@@ -197,7 +197,7 @@ const get24HourOpacity = (timestampStr, minOpacity = 0.20) => {
           />
         );
       })}
-      
+
       {/* 3. Spotter Touchdowns: Bouncing Pins */}
       {touchdowns.map((td, idx) => {
         const [lng, lat] = td.geometry.coordinates;
