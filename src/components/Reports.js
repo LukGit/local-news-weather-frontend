@@ -18,10 +18,57 @@ class Reports extends Component {
     forecastIcon: "",
     hourLine1: "",
     hourLine2: "",
-    mg: 4
+    mg: 4,
+    isLoading: false, // NEW
+    lastUpdated: null // NEW
+  }
+    // Extracted fetch logic
+  fetchEarthquakeData = () => {
+    this.setState({ isLoading: true });
+
+    // fetch earthquake data from USGS
+    const date1 = new Date();
+    date1.setDate(date1.getDate() + 1);
+    let d = date1.getDate();
+    let m = date1.getMonth() + 1;
+    let y = date1.getFullYear();
+    const dateString =  y + '-' + (m <= 9 ? '0' + m : m) + '-' + (d <= 9 ? '0' + d : d);
+    
+    const date = new Date();
+    date.setDate(date.getDate() - 3);
+    d = date.getDate();
+    m = date.getMonth() + 1;
+    y = date.getFullYear();
+    const dateString1 =  y + '-' + (m <= 9 ? '0' + m : m) + '-' + (d <= 9 ? '0' + d : d);
+    
+    const Q_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=" + dateString1 + "&&endtime=" + dateString + "&eventtype=earthquake&minmagnitude=4";
+    
+    fetch(Q_URL)
+      .then(resp => resp.json())
+      .then(quakeResp => {
+        this.props.addReport(quakeResp.features);
+        
+        // Capture timestamp
+        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        
+        this.setState({
+          centerGPS: this.props.gps,
+          filterReports: this.props.reports,
+          sizeFilter: "All",
+          isLoading: false, // Stop spinner
+          lastUpdated: timestamp // Set timestamp
+        });
+      })
+      .catch(error => {
+        console.error("Error fetching USGS data:", error);
+        this.setState({ isLoading: false });
+      });
   }
 
   componentDidMount () {
+    // Execute on initial load
+    this.fetchEarthquakeData();
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -42,31 +89,7 @@ class Reports extends Component {
     console.warn("Geolocation is not supported by this browser.");
   }
 
-    // fetch earthquake data from USGS
-    const date1 = new Date()
-    date1.setDate(date1.getDate() + 1)
-    let d = date1.getDate();
-    let m = date1.getMonth() + 1;
-    let y = date1.getFullYear();
-    const dateString =  y + '-' + (m <= 9 ? '0' + m : m) + '-' + (d <= 9 ? '0' + d : d)
-    const date = new Date()
-    // change date from 1 to 3 to match opacity calculation
-    date.setDate(date.getDate() - 3 )
-    d = date.getDate();
-    m = date.getMonth() + 1;
-    y = date.getFullYear();
-    const dateString1 =  y + '-' + (m <= 9 ? '0' + m : m) + '-' + (d <= 9 ? '0' + d : d)
-    const Q_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=" + dateString1 + "&&endtime=" + dateString + "&eventtype=earthquake&minmagnitude=4"
-    fetch(Q_URL)
-    .then(resp => resp.json())
-    .then(quakeResp => {
-      this.props.addReport(quakeResp.features)
-      this.setState({
-        centerGPS: this.props.gps,
-        filterReports: this.props.reports,
-        sizeFilter: "All"
-      })
-    })
+  
   }
 
   handleMg = (e) => {
@@ -81,7 +104,10 @@ class Reports extends Component {
     );
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
-        <Navbar />
+        <Navbar 
+          onRefresh={this.fetchEarthquakeData} 
+          isRefreshing={this.state.isLoading} 
+        />
         <Menu inverted color='grey' size='mini' style={{ margin: 0, borderRadius: 0, flexShrink: 0, minHeight: 'auto'}}>
         <Menu.Item>
         <Label size='large' color='orange'> 
@@ -98,6 +124,14 @@ class Reports extends Component {
            </div> 
           }/>
           </Menu.Item> : null}
+          {/* NEW: Right-aligned timestamp */}
+          <Menu.Menu position='right'>
+            {this.state.lastUpdated && (
+              <Menu.Item style={{ color: '#ffb3b3' }}>
+                Updated: {this.state.lastUpdated}
+              </Menu.Item>
+            )}
+          </Menu.Menu>
         </Menu>
         <div style={{ flex: 1, position: 'relative', width: '100%' }}>
         <MapReports 

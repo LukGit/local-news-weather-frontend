@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { connect } from 'react-redux';
 //import { logoutUser } from '../actions';
 import { withRouter } from 'react-router-dom'
-import { Menu } from 'semantic-ui-react'
+import { Menu, Button, Icon } from 'semantic-ui-react'
 
 
 class Navbar extends Component {
@@ -54,6 +54,26 @@ class Navbar extends Component {
         >
           Wildfires
         </Menu.Item>
+        {/* NEW: Right-aligned menu for the refresh button */}
+        <Menu.Menu position='right'>
+          
+          {/* We only render the button if the parent actually passed an onRefresh function */}
+          {this.props.onRefresh && (
+            <Menu.Item>
+              <Button 
+                color='teal' 
+                icon 
+                labelPosition='right' 
+                onClick={this.props.onRefresh}
+                loading={this.props.isRefreshing}
+                disabled={this.props.isRefreshing}
+              >
+                <Icon name='refresh' />
+                Refresh
+              </Button>
+            </Menu.Item>
+          )}
+        </Menu.Menu>
       </Menu>
     );
   }

@@ -17,20 +17,21 @@ class CaneReports extends Component {
     forecastIcon: "",
     hourLine1: "",
     hourLine2: "",
-    // New states to hold path arrays mapped by storm ID
     pastTracks: {},
     futureTracks: {},
-    conePolygons: {}
+    conePolygons: {},
+    isLoading: false, // NEW
+    lastUpdated: null // NEW
   } 
-  // Helper method to compute the layer offsets from the NOAA identifier
+
   getLayerNumFromStormId = (stormId, type) => {
     const basin = stormId.substring(0, 2).toUpperCase();
     const stormNum = parseInt(stormId.substring(2, 4), 10);
 
     const basinBaselines = {
-      AT: 6,    // Atlantic
-      EP: 136,  // East Pacific
-      CP: 266   // Central Pacific
+      AT: 6,    
+      EP: 136,  
+      CP: 266   
     };
 
     const startLayer = basinBaselines[basin];
@@ -40,13 +41,11 @@ class CaneReports extends Component {
     
     if (type === 'future') return stormBlockStart + 1;
     if (type === 'past') return stormBlockStart + 6;
-    if (type === 'cone') return stormBlockStart + 7; // Cone is offset +7
+    if (type === 'cone') return stormBlockStart + 7; 
     return null;
   };
 
-  // Dedicated dynamic fetch pipeline for tracks and cones
   fetchStormTracks = (storms) => {
-    // 1. Fetch Cones Globally from the verified Summary Layer
     const globalConeUrl = `https://mapservices.weather.noaa.gov/tropical/rest/services/tropical/NHC_tropical_weather_summary/MapServer/7/query?where=1%3D1&outFields=*&f=geojson`;
     
     fetch(globalConeUrl)
@@ -54,11 +53,9 @@ class CaneReports extends Component {
       .then(geojsonData => {
         if (!geojsonData.features) return;
 
-        // 2. Loop through active storms and map them to NOAA's dynamic "bin" slots
         storms.forEach(storm => {
-          let targetBin = storm.id; // Fallback to raw ID (e.g., "ep062026")
+          let targetBin = storm.id; 
 
-          // Find this storm in the global cone layer
           const matchingFeature = geojsonData.features.find(feature => {
             const fileDateStr = feature.properties.idp_source || "";
             return fileDateStr.toLowerCase().includes(storm.id.toLowerCase()) || 
@@ -66,7 +63,6 @@ class CaneReports extends Component {
           });
 
           if (matchingFeature) {
-            // Process and save the Cone Polygon
             if (matchingFeature.geometry?.coordinates) {
               const rawCoordinates = matchingFeature.geometry.coordinates[0];
               const cleanCoords = rawCoordinates.map(coord => ({ lat: coord[1], lng: coord[0] }));
@@ -76,17 +72,14 @@ class CaneReports extends Component {
               }));
             }
             
-            // CRITICAL FIX: Extract the actual NOAA active map slot (e.g., "EP1", "AT2")
             if (matchingFeature.properties.binnumber) {
               targetBin = matchingFeature.properties.binnumber; 
             }
           }
 
-          // 3. Fetch Line Tracks using targetBin (EP1 calculates to Layer 142 instead of 272!)
           const pastLayer = this.getLayerNumFromStormId(targetBin, 'past');
           const futureLayer = this.getLayerNumFromStormId(targetBin, 'future');
 
-          // Helper to parse multiple segments and flatten them into ONE continuous array
           const parseTrackFeatures = (features) => {
             if (!features || !features.length) return [];
             return features.flatMap(feature => {
@@ -112,7 +105,6 @@ class CaneReports extends Component {
               .then(trackData => {
                 if (trackData.features && trackData.features.length > 0) {
                   this.setState(prevState => ({
-                    // Store the flattened coordinates using the original storm.id
                     pastTracks: { ...prevState.pastTracks, [storm.id]: parseTrackFeatures(trackData.features) }
                   }));
                 }
@@ -136,31 +128,39 @@ class CaneReports extends Component {
       .catch(err => console.error("Error fetching global storm forecast cones:", err));
   }
 
-  componentDidMount () {
-    // fetch hurricane data from NOAA
-    // test data API is https://www.nhc.noaa.gov/productexamples/NHC_JSON_Sample.json
-    // real data site is https://www.nhc.noaa.gov/CurrentStorms.json
-    const H_URL = "https://www.nhc.noaa.gov/CurrentStorms.json"
-    // const H_URL = "https://www.nhc.noaa.gov/productexamples/NHC_JSON_Sample.json"
-    // this fetch has a CORS problem because of the end point
-    // this is circumvented using Moesif Origin & CORS Changer which is a plugin that allows you to send cross-domain requests. 
-    // You can also override Request Origin and CORS headers. 
-    // This must be turned on. Make sure blue on flag is shown on extension bar
-    // Added hurricane track fetch to plot past and future tracks. 7/2/2026
+  // NEW: Extracted Fetch Method
+  fetchAllHurricaneData = () => {
+    this.setState({ isLoading: true });
+    const H_URL = "https://www.nhc.noaa.gov/CurrentStorms.json";
+
     fetch(H_URL)
-    .then(resp => resp.json())
-    .then(caneResp => {
-      this.props.addCaneReport(caneResp.activeStorms)
-      this.setState({
-        centerGPS: this.props.gps,
-        filterHtsReports: this.props.c_reports,
-        sizeFilter: "All"
-      }, () => {
-        // Kick off track downloads immediately once active storms load into state
-        this.fetchStormTracks(caneResp.activeStorms);
+      .then(resp => resp.json())
+      .then(caneResp => {
+        this.props.addCaneReport(caneResp.activeStorms);
         
+        // Capture timestamp
+        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        this.setState({
+          centerGPS: this.props.gps,
+          filterHtsReports: this.props.c_reports,
+          sizeFilter: "All",
+          isLoading: false,        // Stop spinner
+          lastUpdated: timestamp  // Set timestamp
+        }, () => {
+          // Fire off track fetches asynchronously in the background
+          this.fetchStormTracks(caneResp.activeStorms);
+        });
       })
-    })
+      .catch(err => {
+        console.error("Error fetching NOAA Hurricane data:", err);
+        this.setState({ isLoading: false });
+      });
+  }
+
+  componentDidMount () {
+    // Execute on initial load
+    this.fetchAllHurricaneData();
   }
 
   handleHtsOnly = (e, { checked }) => {
@@ -177,16 +177,10 @@ class CaneReports extends Component {
   }
 
   getWeather = () => {
-    // Grab GPS coordinates from Redux state (or fallback)
     const gps = this.props.user.gps || { lat: 22.3193, lng: 114.1694 };
-  
-    // Format location string as "latitude,longitude"
     const locationParam = `${gps.lat},${gps.lng}`;
-
-    // api key in .env file
-    const W_URL = "https://api.weatherapi.com/v1/forecast.json?key=" + 
-      process.env.REACT_APP_WEATHER_API_KEY + 
-      "&days=2&q=" + locationParam;
+    const W_URL = "https://api.weatherapi.com/v1/forecast.json?key=" + process.env.REACT_APP_WEATHER_API_KEY + "&days=2&q=" + locationParam;
+    
     fetch(W_URL)
     .then(resp => resp.json())
     .then(weatherResp => {
@@ -224,73 +218,86 @@ class CaneReports extends Component {
       })
     })
   }
-  // this shows the NavBar and the MapReports which is also passed the report items to display on map
+  
   render() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
-        <Navbar/>
+        {/* Wire up Navbar props */}
+        <Navbar 
+          onRefresh={this.fetchAllHurricaneData} 
+          isRefreshing={this.state.isLoading} 
+        />
         <Menu inverted color='grey' size='mini' style={{ margin: 0, borderRadius: 0, flexShrink: 0, minHeight: 'auto'}}>
-        <Menu.Item>
-        <Label size='large' color='orange'> 
-        <Icon name='lightning'/>
-        {this.props.c_reports.length > 0 ? ` Active cyclones: ${this.props.c_reports.length}` : "No active cyclones!"}
-        </Label> 
-        </Menu.Item>
-        {this.props.c_reports.length > 0 ?
-        <Menu.Item>
-          <Popup content='Show only hurricanes and tropical storms' trigger={<Checkbox 
-              toggle
-              checked={this.state.htsOnly}
-              label={{ children: 'Hurricanes/Tropical Storms Only', style: { color: 'white' } }}
-              onClick={this.handleHtsOnly}
-          /> } />
+          <Menu.Item>
+            <Label size='large' color='orange'> 
+              <Icon name='lightning'/>
+              {this.props.c_reports.length > 0 ? ` Active cyclones: ${this.props.c_reports.length}` : "No active cyclones!"}
+            </Label> 
+          </Menu.Item>
+          {this.props.c_reports.length > 0 ?
+          <Menu.Item>
+            <Popup content='Show only hurricanes and tropical storms' trigger={<Checkbox 
+                toggle
+                checked={this.state.htsOnly}
+                label={{ children: 'Hurricanes/Tropical Storms Only', style: { color: 'white' } }}
+                onClick={this.handleHtsOnly}
+            /> } />
           </Menu.Item> : null}
-        
-        <Modal size='tiny' trigger={<Menu.Item>
-          <Popup content='See local weather forecast' trigger={
-          <Button animated='fade' 
-          onClick={() => this.getWeather(`${this.props.user.zipcode}`)} size='medium' floated='right' inverted color="grey">
-            <Button.Content visible>
-              <Icon name='sun'/>
-              </Button.Content>
-            <Button.Content hidden>
-            Weather
-            </Button.Content>
-          </Button>} /></Menu.Item>} closeIcon>
-          <Modal.Content>
-            <Item.Group>
+          <Modal size='tiny' trigger={
+            <Menu.Item>
+              <Popup content='See local weather forecast' trigger={
+              <Button animated='fade' 
+              onClick={() => this.getWeather(`${this.props.user.zipcode}`)} size='medium' inverted color="grey">
+                <Button.Content visible>
+                  <Icon name='sun'/>
+                </Button.Content>
+                <Button.Content hidden>
+                  Weather
+                </Button.Content>
+              </Button>} />
+            </Menu.Item>} closeIcon>
+            <Modal.Content>
+              <Item.Group>
+                <Item>
+                <Item.Content>
+                  <Item.Header>Your Neighborhood Weather and Forecast</Item.Header>
+                </Item.Content>
+                </Item>
               <Item>
-              <Item.Content>
-                <Item.Header>Your Neighborhood Weather and Forecast</Item.Header>
-              </Item.Content>
+                <Item.Content>
+                  <Item.Header>Current Condition</Item.Header>
+                  <Item.Image src={this.state.weatherIcon} size="tiny" /> 
+                  <Item.Content>{this.state.weather}</Item.Content> 
+                </Item.Content>
               </Item>
-            <Item>
-              <Item.Content>
-                <Item.Header>Current Condition</Item.Header>
-                <Item.Image src={this.state.weatherIcon} size="tiny" /> 
-                <Item.Content>{this.state.weather}</Item.Content> 
-              </Item.Content>
-            </Item>
-            <Item>
-              <Item.Content>
-                <Item.Header>Tomorrow's Forecast</Item.Header>
-                <Item.Image src={this.state.forecastIcon} size="tiny" /> 
-                <Item.Content>{this.state.forecast}</Item.Content> 
-              </Item.Content>
-            </Item>
-            <Item>
-              <Item.Content>
-                <Item.Header>Hourly Forecast</Item.Header> 
-                <Item.Content>{this.state.hourLine1}</Item.Content> 
-                <Item.Content>{this.state.hourLine2}</Item.Content>
-              </Item.Content>
-            </Item>
-            </Item.Group>
-          </Modal.Content>
-        </Modal>
+              <Item>
+                <Item.Content>
+                  <Item.Header>Tomorrow's Forecast</Item.Header>
+                  <Item.Image src={this.state.forecastIcon} size="tiny" /> 
+                  <Item.Content>{this.state.forecast}</Item.Content> 
+                </Item.Content>
+              </Item>
+              <Item>
+                <Item.Content>
+                  <Item.Header>Hourly Forecast</Item.Header> 
+                  <Item.Content>{this.state.hourLine1}</Item.Content> 
+                  <Item.Content>{this.state.hourLine2}</Item.Content>
+                </Item.Content>
+              </Item>
+              </Item.Group>
+            </Modal.Content>
+          </Modal>
+          {/* NEW: Right-aligned wrapper for timestamp and weather button */}
+          <Menu.Menu position='right'>
+            {this.state.lastUpdated && (
+              <Menu.Item style={{ color: '#ffb3b3' }}>
+                Updated: {this.state.lastUpdated}
+              </Menu.Item>
+            )}
+
+          </Menu.Menu>
 
         </Menu>
-        {/* Pass the track state records down via props to the map layout */}
         <div style={{ flex: 1, position: 'relative', width: '100%' }}>
         <MapCaneReports 
           c_reports={this.state.filterHtsReports} 

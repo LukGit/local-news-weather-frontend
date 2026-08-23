@@ -45,7 +45,9 @@ class FireReports extends Component {
   state = {
     sizeFilter: "All",
     centerGPS: null,
-    largeFiresOnly: false // Added toggle tracker
+    largeFiresOnly: false, // Added toggle tracker
+    isLoading: false,     // NEW
+    lastUpdated: null     // NEW
   } 
   
   handleLargeFiresToggle = (e, { checked }) => {
@@ -53,6 +55,7 @@ class FireReports extends Component {
 }
 // Dedicated dynamic fetch pipeline for wildfire locations and perimeter geometries
   fetchActiveWildfires = () => {
+    this.setState({ isLoading: true }); 
     const params = new URLSearchParams({
       where: "poly_GISAcres >= 500",
       // Added attr_FireDiscoveryDateTime to outFields:
@@ -115,6 +118,11 @@ class FireReports extends Component {
           }).filter(Boolean);
 
           this.props.addFireReport(firePins);
+          const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          this.setState({ 
+            isLoading: false,
+            lastUpdated: timestamp 
+          });
         }
       })
       .catch(err => console.error("Error fetching fire perimeters:", err));
@@ -140,7 +148,10 @@ class FireReports extends Component {
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
-        <Navbar/>
+        <Navbar
+          onRefresh={this.fetchActiveWildfires} 
+          isRefreshing={this.state.isLoading} 
+        />
         <Menu inverted color='grey' size='mini' style={{ margin: 0, borderRadius: 0, flexShrink: 0, minHeight: 'auto'}}>
           <Menu.Item>
             <Label size='large' color='orange'> {/* Changed color to orange for visual thematic consistency */}
@@ -164,6 +175,14 @@ class FireReports extends Component {
             onChange={this.handleLargeFiresToggle}
           />
         </Menu.Item>
+        {/* NEW: Timestamp display pushed to the right */}
+        <Menu.Menu position='right'>
+          {this.state.lastUpdated && (
+            <Menu.Item style={{ color: '#ffb3b3' }}>
+              Updated: {this.state.lastUpdated}
+            </Menu.Item>
+          )}
+        </Menu.Menu>
         </Menu>
         <div style={{ flex: 1, position: 'relative', width: '100%' }}>
         {/* Render canvas passing down only the coordinates and configurations needed for pins */}

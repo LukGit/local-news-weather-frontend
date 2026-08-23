@@ -41,7 +41,10 @@ class TornadoReports extends Component {
   render() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-        <Navbar />
+        <Navbar 
+          onRefresh={this.fetchTornadoData} 
+          isRefreshing={this.state.isLoading} 
+        />
         <Menu id="menu-head" color="red" size="mini" inverted style={{ margin: 0, borderRadius: 0 }}>
           <Menu.Item header>National Tornado Threat Level</Menu.Item>
           <Menu.Item>
@@ -56,21 +59,6 @@ class TornadoReports extends Component {
                 Updated: {this.state.lastUpdated}
               </Menu.Item>
             )}
-
-            <Menu.Item>
-              <Button 
-                color='red' 
-                icon 
-                labelPosition='right' 
-                onClick={this.fetchTornadoData}
-                loading={this.state.isLoading}
-                disabled={this.state.isLoading}
-              >
-                <Icon name='refresh' />
-                Refresh Threat Data
-              </Button>
-            </Menu.Item>
-            
           </Menu.Menu>
         </Menu>
         <div style={{ flexGrow: 1, position: 'relative' }}>
