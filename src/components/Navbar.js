@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { connect } from 'react-redux';
 //import { logoutUser } from '../actions';
 import { withRouter } from 'react-router-dom'
-import { Menu, Button, Icon } from 'semantic-ui-react'
+import { Menu, Button, Icon, Popup } from 'semantic-ui-react'
 
 
 class Navbar extends Component {
@@ -60,17 +60,22 @@ class Navbar extends Component {
           {/* We only render the button if the parent actually passed an onRefresh function */}
           {this.props.onRefresh && (
             <Menu.Item>
+              <Popup content='Refresh threat data' trigger={
               <Button 
                 color='teal' 
-                icon 
-                labelPosition='right' 
+                size='huge'
                 onClick={this.props.onRefresh}
                 loading={this.props.isRefreshing}
                 disabled={this.props.isRefreshing}
+                animated='fade'
               >
-                <Icon name='refresh' />
-                Refresh
-              </Button>
+                <Button.Content hidden>
+                  Refresh
+                </Button.Content>
+                <Button.Content visible>
+                  <Icon name='refresh'/>
+                </Button.Content>
+              </Button>}/>
             </Menu.Item>
           )}
         </Menu.Menu>

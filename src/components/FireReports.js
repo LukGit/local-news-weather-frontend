@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import Navbar from './Navbar';
 import MapFireReports from './MapFireReports';
 import { addFireReport } from '../actions'; // Corrected action import
-import { Label, Icon, Menu, Checkbox } from 'semantic-ui-react';
+import { Label, Icon, Menu, Checkbox, Popup } from 'semantic-ui-react';
 
 const getDaysBurning = (timestamp) => {
   if (!timestamp || isNaN(timestamp)) return "Unknown";
@@ -156,7 +156,7 @@ class FireReports extends Component {
           <Menu.Item>
             <Label size='large' color='orange'> {/* Changed color to orange for visual thematic consistency */}
               <Icon name='fire'/> {/* Swap out lightning icon for a fire icon */}
-              {this.props.f_reports.length > 0 ? ` Active fires: ${this.props.f_reports.length}` : "No active fires!"}
+              {this.props.f_reports.length > 0 ? ` Active fires > 500acres: ${this.props.f_reports.length}` : "No active fires!"}
             </Label> 
           </Menu.Item>
           {/* ⚡ NEW: Display Aggregate Costs next to the fire count */}
@@ -168,12 +168,14 @@ class FireReports extends Component {
         </Menu.Item>
           {/* ADD THE CHECKBOX INTERFACE ITEM RIGHT HERE */}
         <Menu.Item>
+          <Popup content='Show large fires only' trigger={
           <Checkbox 
             toggle 
-            label={{ children: 'Large Fires Only (>30k acres)', style: { color: 'white' } }}
+            label={{ children: '>30k acres', style: { color: 'white' } }}
             checked={this.state.largeFiresOnly}
             onChange={this.handleLargeFiresToggle}
           />
+          }/>
         </Menu.Item>
         {/* NEW: Timestamp display pushed to the right */}
         <Menu.Menu position='right'>
