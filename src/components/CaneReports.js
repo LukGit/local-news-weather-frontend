@@ -247,7 +247,7 @@ class CaneReports extends Component {
             <Menu.Item>
               <Popup content='See local weather forecast' trigger={
               <Button animated='fade' 
-              onClick={() => this.getWeather(`${this.props.user.zipcode}`)} size='medium' inverted color="grey">
+              onClick={() => this.getWeather()} size='medium' inverted color="grey">
                 <Button.Content visible>
                   <Icon name='sun'/>
                 </Button.Content>

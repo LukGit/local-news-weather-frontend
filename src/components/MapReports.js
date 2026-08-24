@@ -133,8 +133,9 @@ handleClick = (props, marker, e) => {
   // this shows a map with earthquake reports as markers on map
   // each report item from store is mapped to a marker on map based on gps data received from USGS
   // details of the quake is displayed via a infowindow when the marker is clicked
-  // initialCenter is to set map center when map is initially loaded
+  // initialCenter is to set map center when map is initially loaded based on user location
   // center is to set the map center when map is recentered by a user click
+  // added opacity to have older quakes fade into the background
   render() {
     return (
       <Map google={this.props.google} 

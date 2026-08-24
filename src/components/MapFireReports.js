@@ -142,6 +142,13 @@ export class MapFireReports extends Component {
         console.error("Wind fetch failed:", error);
     }  
 }
+  // this shows a map with wildfires reports as markers on map
+  // each report item from store is mapped to a marker on map based on gps data received from ARCGIS
+  // details of the fire is displayed via a infowindow when the marker is clicked
+  // initialCenter is to set map center when map is initially loaded using US location
+  // center is to set the map center when map is recentered by a user click
+  // When user zooms in bured area polygons are displayed
+  // When user zooms in further win vectors are shown to indicate direction and force
   render() {
     // Show detailed boundary polygons only when zoomed into localized region (Zoom >= 9) 
     const showPerimeters = this.state.currentZoom >= 9;

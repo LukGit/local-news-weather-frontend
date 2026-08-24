@@ -114,28 +114,14 @@ export class MapCaneReports extends Component {
       })
     }
   }
-  // this shows a map with earthquake reports as markers on map
-  // each report item from store is mapped to a marker on map based on gps data received from USGS
-  // details of the quake is displayed via a infowindow when the marker is clicked
-  // initialCenter is to set map center when map is initially loaded
+  // this shows a map with tropical cyclones reports as markers on map
+  // each report item from store is mapped to a marker on map based on gps data received from NHC
+  // details of the cyclone is displayed via a infowindow when the marker is clicked
+  // initialCenter is to set map center when map is initially loaded based on US location
   // center is to set the map center when map is recentered by a user click
   // Added new code to plot hurricane past and future tracks on the map 7/2/2026
   // Added new code to plot hurricane future path uncertainty cone on the map  7/14/2026
   render() {
-    // --- DEBUGGING BLOCK START ---
-    //console.log("=== HURRICANE CONE TELEMETRY CHECK ===");
-    //console.log("Total c_reports incoming:", this.props.c_reports ? this.props.c_reports.length : 0);
-    //console.log("Raw conePolygons keys available:", Object.keys(this.props.conePolygons || {}));
-    
-    //this.props.c_reports.forEach(r => {
-    //  const path = this.props.conePolygons[r.id];
-    //  console.log(`Storm: ${r.name || r.id} (${r.id}) | Cone Array Size:`, path ? path.length : "UNDEFINED / MISSING");
-    //  if (path && path.length > 0) {
-    //    console.log(`Sample coordinate for ${r.id}:`, path[0]);
-    //  }
-    //});
-    //console.log("======================================");
-    // --- DEBUGGING BLOCK END ---
     return (
       <Map google={this.props.google} 
       zoom={4}

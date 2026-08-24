@@ -93,7 +93,12 @@ class MapTornadoReports extends Component {
       selectedReport: null
     });
   };
-
+  // this shows a map with tornado warning and touchdown reports as markers on map
+  // each report item from store is mapped to a marker on map based on gps data received from NWS
+  // details of the warning/touchdown is displayed via a infowindow when the marker is clicked
+  // initialCenter is to set map center when map is initially loaded based on US location
+  // center is to set the map center when map is recentered by a user click
+  // When user zooms in the warning polygon is displayed
   render() {
     const { currentZoom, touchdowns } = this.state;
     const { t_reports, google, gps } = this.props;
