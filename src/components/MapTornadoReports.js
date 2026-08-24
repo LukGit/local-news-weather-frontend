@@ -210,6 +210,7 @@ const get24HourOpacity = (timestampStr, minOpacity = 0.20) => {
             key={`touchdown-${idx}`}
             position={{ lat, lng }}
             animation={google.maps.Animation.BOUNCE}
+            title={`${props.city || ''}, ${props.state || ''}`}
             icon={{
               url: tornadoS,
               scaledSize: new google.maps.Size(32, 32)
