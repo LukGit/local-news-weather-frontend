@@ -41,9 +41,9 @@
     ]
   },
   "overrides": {
-    "postcss-safe-parser": "^6.0.0",
     "@babel/core": "^7.16.0"
   },
+
   "engines": {
     "node": "20.x"
   }
