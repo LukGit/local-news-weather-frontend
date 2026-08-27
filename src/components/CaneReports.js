@@ -131,7 +131,11 @@ class CaneReports extends Component {
   // NEW: Extracted Fetch Method
   fetchAllHurricaneData = () => {
     this.setState({ isLoading: true });
-    const H_URL = "https://www.nhc.noaa.gov/CurrentStorms.json";
+    //const H_URL = "https://www.nhc.noaa.gov/CurrentStorms.json";
+// The browser thinks it's fetching from your own server, bypassing CORS completely
+    //const H_URL = "https://corsproxy.io/?" + encodeURIComponent("https://www.nhc.noaa.gov/CurrentStorms.json");
+    const H_URL = "/api/nhc/CurrentStorms.json";
+
 
     fetch(H_URL)
       .then(resp => resp.json())

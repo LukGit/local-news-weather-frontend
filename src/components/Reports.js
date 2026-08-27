@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import Navbar from './Navbar';
 import MapReports from './MapReports'
 import { addReport } from '../actions'
-import { Label, Icon, Menu, Checkbox, Popup } from 'semantic-ui-react'
+import { Label, Icon, Menu, Checkbox, Popup, Button, Progress } from 'semantic-ui-react'
 
 class Reports extends Component {
   state = {
@@ -20,7 +20,10 @@ class Reports extends Component {
     hourLine2: "",
     mg: 4,
     isLoading: false, // NEW
-    lastUpdated: null // NEW
+    lastUpdated: null, // NEW
+    // NEW STATES FOR ANIMATION
+    activeIndex: null,
+    isPlaying: false
   }
     // Extracted fetch logic
   fetchEarthquakeData = () => {
@@ -97,11 +100,67 @@ class Reports extends Component {
     mg: Number(e.target.value) // Ensure value is a number for clean comparison
   });
 }
+  // NEW: Playback Logic
+  playSeismicSequence = () => {
+    // If already playing, act as a Stop button
+    if (this.state.isPlaying) {
+      clearInterval(this.playbackInterval);
+      this.setState({ isPlaying: false, activeIndex: null });
+      return;
+    }
+
+    // Get current filtered reports and sort chronologically (oldest first)
+    const displayedReports = this.props.reports
+      .filter(r => r.properties.mag >= this.state.mg)
+      .sort((a, b) => a.properties.time - b.properties.time);
+
+    if (displayedReports.length === 0) return;
+
+    this.setState({ isPlaying: true, activeIndex: 0 });
+
+    // Step through the array every 400ms
+    this.playbackInterval = setInterval(() => {
+      this.setState(prevState => {
+        if (prevState.activeIndex >= displayedReports.length - 1) {
+          clearInterval(this.playbackInterval);
+          return { isPlaying: false, activeIndex: null };
+        }
+        return { activeIndex: prevState.activeIndex + 1 };
+      });
+    }, 750); // Adjust this MS value to make it faster or slower
+  }
+
+  // NEW HELPER METHOD: Only recalculates if new data arrives or slider moves
+  getMemoizedReports = () => {
+    if (
+      !this.memoizedReports || 
+      this.lastMg !== this.state.mg || 
+      this.lastReports !== this.props.reports
+    ) {
+      this.memoizedReports = this.props.reports
+        .filter(r => r.properties.mag >= this.state.mg)
+        .sort((a, b) => a.properties.time - b.properties.time)
+        // Pre-build the position object here so it never changes reference in the map
+        .map(r => ({
+          ...r,
+          cachedPosition: { lat: r.geometry.coordinates[1], lng: r.geometry.coordinates[0] }
+        }));
+        
+      this.lastMg = this.state.mg;
+      this.lastReports = this.props.reports;
+    }
+    return this.memoizedReports;
+  }
   // this shows the NavBar and the MapReports which is also passed the report items to display on map
   render() {
-    const displayedReports = this.props.reports.filter(
-    r => r.properties.mag >= this.state.mg
-    );
+      // USE THE CACHED ARRAY HERE
+    const displayedReports = this.getMemoizedReports();
+    // NEW: Calculate progress percentage
+    let progressPercent = 0;
+    if (this.state.activeIndex !== null && displayedReports.length > 1) {
+      progressPercent = (this.state.activeIndex / (displayedReports.length - 1)) * 100;
+    }
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
         <Navbar 
@@ -124,6 +183,33 @@ class Reports extends Component {
            </div> 
           }/>
           </Menu.Item> : null}
+          {/* NEW: Play Button Menu Item */}
+          {this.props.reports.length > 0 && (
+            <Menu.Item>
+              <Popup content='See events chronologically' trigger={
+              <Button 
+                icon={this.state.isPlaying ? 'stop' : 'play'} 
+                color={this.state.isPlaying ? 'red' : 'green'}
+                size='mini'
+                content={this.state.isPlaying ? 'Stop' : 'Play Timeline'}
+                onClick={this.playSeismicSequence} 
+                compact
+              />}
+              />
+            </Menu.Item>
+          )}
+          {/* NEW: Stretchy Progress Bar */}
+          {this.state.activeIndex !== null && (
+            <Menu.Item style={{ flexGrow: 1, padding: '0 20px' }}>
+              <Progress 
+                percent={progressPercent} 
+                color='red' 
+                size='tiny' 
+                style={{ margin: 0, width: '30%' }}
+                active={this.state.isPlaying} // Gives it a nice pulsing CSS effect while playing
+              />
+            </Menu.Item>
+          )}
           {/* NEW: Right-aligned timestamp */}
           <Menu.Menu position='right'>
             {this.state.lastUpdated && (
@@ -136,7 +222,9 @@ class Reports extends Component {
         <div style={{ flex: 1, position: 'relative', width: '100%' }}>
         <MapReports 
         reports={displayedReports}  
-        centerGPS={this.state.centerGPS} />
+        centerGPS={this.state.centerGPS}
+        activeIndex={this.state.activeIndex} // <-- MUST ADD THIS LINE
+         />
         </div>
       </div>
     )

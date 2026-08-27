@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/nhc/:path*",
+      "destination": "https://www.nhc.noaa.gov/:path*"
+    }
+  ]
+}

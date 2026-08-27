@@ -21,7 +21,8 @@ export class MapReports extends Component {
     quakeDate: "",
     quakeAlert: "",
     quakeLink:"",
-    quakeDepth:""
+    quakeDepth:"",
+    staticRenderTime: Date.now() // NEW: Freeze the time when component loads
   }
   
   componentDidMount () {
@@ -145,7 +146,7 @@ handleClick = (props, marker, e) => {
       center={this.state.recenterGPS || this.props.centerGPS}
       onClick={this.onMapClick}
       >
-        {this.props.reports.map(r => {
+        {this.props.reports.map((r, index) => {
           let qIcon
           if (r.properties.mag < 5) {
             qIcon = quakeS
@@ -156,18 +157,20 @@ handleClick = (props, marker, e) => {
           } else {
             qIcon = quakeX
           }
-          // --- ADD TIMING CALCULATION HERE ---
-          const timePassedMs = Date.now() - r.properties.time;
-          const hoursPassed = timePassedMs / (1000 * 60 * 60);
-          // Linear decay over 24 hours, clamping it at a minimum of 0.25 so it stays visible. Change here to 72 if request 3 days of data
+          // Use the frozen time from state
+          const timePassedMs = this.state.staticRenderTime - r.properties.time; 
+          const hoursPassed = Math.round(timePassedMs / (1000 * 60 * 60));
           const calculatedOpacity = Math.max(0.25, 1 - (hoursPassed / 72));
-
+          const isBouncing = this.props.activeIndex === index;
           return <Marker
-          key={r.id}
+          // THE FIX: Dynamically change the key to force this specific marker to instantly remount
+          key={isBouncing ? `${r.id}-bounce` : r.id}
           name={r.id}
           icon={qIcon}
           opacity={calculatedOpacity} // --- APPLY OPACITY LAYER HERE ---
-          position={{lat: r.geometry.coordinates[1], lng: r.geometry.coordinates[0]}}
+          position={r.cachedPosition}
+          // The bounce trigger! (Use 1 if you are using @react-google-maps/api)
+          animation={isBouncing ? window.google.maps.Animation.BOUNCE : null} 
           title={r.properties.place}
           onClick={this.handleClick}
           >
