@@ -1,0 +1,14 @@
+diff --git a/node_modules/semantic-ui-react/dist/es/lib/index.js b/node_modules/semantic-ui-react/dist/es/lib/index.js
+index bacfdaa..0029cc9 100644
+--- a/node_modules/semantic-ui-react/dist/es/lib/index.js
++++ b/node_modules/semantic-ui-react/dist/es/lib/index.js
+@@ -29,8 +29,7 @@ export { _normalizeOffset as normalizeOffset };
+ import _normalizeTransitionDuration from './normalizeTransitionDuration';
+ export { _normalizeTransitionDuration as normalizeTransitionDuration };
+ import _objectDiff from './objectDiff';
+-export { _objectDiff as objectDiff }; // Heads up! We import/export for this module to safely remove it with "babel-plugin-filter-imports"
+-
++export const objectDiff = () => ({});
+ //
+ // Hooks
+ //
