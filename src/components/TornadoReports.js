@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Navbar from './Navbar';
 import { addTornadoReport } from '../actions';
-import { Menu, Button, Icon } from 'semantic-ui-react';
+import { Menu } from 'semantic-ui-react';
 import MapTornadoReports from './MapTornadoReports'; 
 
 class TornadoReports extends Component {

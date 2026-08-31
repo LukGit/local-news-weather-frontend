@@ -272,7 +272,7 @@ export class MapFireReports extends Component {
          {/* NEW: Wind Vectors Layer */}
     {this.state.windVectors.map((vector, index) => {
         // Shift rotation by 180 degrees so the arrow points TO the destination, not FROM the origin
-        const arrowRotation = (vector.direction + 180) % 360;
+        //const arrowRotation = (vector.direction + 180) % 360;
 
         return (
             <Marker 
