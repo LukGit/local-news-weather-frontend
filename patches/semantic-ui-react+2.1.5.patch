@@ -1,8 +1,16 @@
 diff --git a/node_modules/semantic-ui-react/dist/es/lib/index.js b/node_modules/semantic-ui-react/dist/es/lib/index.js
-index bacfdaa..154b082 100644
+index bacfdaa..e4efea7 100644
 --- a/node_modules/semantic-ui-react/dist/es/lib/index.js
 +++ b/node_modules/semantic-ui-react/dist/es/lib/index.js
-@@ -29,8 +29,8 @@ export { _normalizeOffset as normalizeOffset };
+@@ -4,7 +4,6 @@ import * as _childrenUtils from './childrenUtils';
+ export { _childrenUtils as childrenUtils };
+ export { useKeyOnly, useKeyOrValueAndKey, useValueAndKey, useMultipleProp, useTextAlignProp, useVerticalAlignProp, useWidthProp } from './classNameBuilders';
+ import * as _customPropTypes from './customPropTypes';
+-export { _customPropTypes as customPropTypes };
+ import _eventStack from './eventStack';
+ export { _eventStack as eventStack };
+ export * from './factories';
+@@ -29,10 +28,11 @@ export { _normalizeOffset as normalizeOffset };
  import _normalizeTransitionDuration from './normalizeTransitionDuration';
  export { _normalizeTransitionDuration as normalizeTransitionDuration };
  import _objectDiff from './objectDiff';
@@ -13,3 +21,7 @@ index bacfdaa..154b082 100644
  //
  // Hooks
  //
+ import _useClassNamesOnNode from './hooks/useClassNamesOnNode';
++import { defaultModifiers } from '@popperjs/core/lib/popper-lite';
+ export { _useClassNamesOnNode as useClassNamesOnNode };
+\ No newline at end of file
