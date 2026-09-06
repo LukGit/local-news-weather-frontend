@@ -5,7 +5,7 @@ import quakeM from '../img/quake36.png'
 import quakeL from '../img/quake48.png'
 import quakeX from '../img/quake64.png'
 import { withRouter } from 'react-router-dom'
-import { Item } from 'semantic-ui-react'
+//import { Item } from 'semantic-ui-react/dist/commonjs'
 
 
 export class MapReports extends Component {
@@ -14,7 +14,7 @@ export class MapReports extends Component {
     centerGPS: this.props.gps,
     filterReports: [],
     recenterGPS: null,
-    qMarker: "",
+    qMarker: null,
     showInfo: false,
     quakePl: "",
     quakeMag: "",
@@ -27,13 +27,25 @@ export class MapReports extends Component {
   
   componentDidMount () {
     // set center GPS to user registered GPS
+    // Initialize with whatever the parent has right now (even if it's null/pending)
     this.setState({
-      centerGPS: this.props.gps
-    })
+      centerGPS: this.props.centerGPS || this.props.gps
+    });
   }
   
+  // NEW: Catch the async browser geolocation when it finally arrives from the parent
+  componentDidUpdate(prevProps) {
+    if (prevProps.centerGPS !== this.props.centerGPS) {
+      this.setState({
+        centerGPS: this.props.centerGPS
+      });
+    }
+  }
 handleClick = (props, marker, e) => {
     // this set the detail information of the quake and turn on the infowindow
+    // add default location
+    //const userLat = this.props.centerGPS?.lat || this.props.gps?.lat || 41.8781;
+    //const userLng = this.props.centerGPS?.lng || this.props.gps?.lng || -87.6298;
     const quake = this.props.reports.find(r => r.id === props.name)
     if (!quake) return;
     const Q_URL = quake.properties.detail
@@ -45,10 +57,9 @@ handleClick = (props, marker, e) => {
       // Note: USGS GeoJSON coordinates arrays are ordered as [Longitude, Latitude, Depth]
       const epicenterLng = quake.geometry.coordinates[0];
       const epicenterLat = quake.geometry.coordinates[1];
-      // Safely read user GPS from centerGPS or gps prop with optional chaining
-      const userLat = this.props.centerGPS?.lat || this.props.gps?.lat;
-      const userLng = this.props.centerGPS?.lng || this.props.gps?.lng;
-
+      // Safely read from the synced state instead of props
+      const userLat = this.state.centerGPS?.lat;
+      const userLng = this.state.centerGPS?.lng;
       // Only calculate distance if user location is valid
       let distanceFromHome = null;
       if (userLat && userLng) {
@@ -177,83 +188,83 @@ handleClick = (props, marker, e) => {
           </Marker>
         })}
         <InfoWindow
-          marker={this.state.qMarker}
-          visible={this.state.showInfo}
-          >
-            <Item.Group>
-              <Item>
-                <Item.Content>
-                <Item.Header>Origin Location</Item.Header>
-                <Item.Description>{this.state.quakePl}</Item.Description>
-                  </Item.Content>
-                </Item>
-              <Item>
-                <Item.Content>
-                <Item.Header>Date</Item.Header>
-                <Item.Description>{this.state.quakeDate}</Item.Description>
-                  </Item.Content>
-                </Item>  
-              <Item>
-                <Item.Content>
-                <Item.Header>Magnitude</Item.Header>
-                <Item.Description>{this.state.quakeMag}</Item.Description>
-                  </Item.Content>
-                </Item>  
-              <Item>
-                <Item.Content>
-                <Item.Header>Depth in Km</Item.Header>
-                {/* Add inline styling here */}
-                <Item.Description style={{ color: this.getDepthColor(this.state.quakeDepth), fontWeight: 'bold' }}>
-                  {this.state.quakeDepth}
-                </Item.Description>
-                </Item.Content>
-                </Item>
-              <Item>
-                <Item.Content>
-                <Item.Header>Alert</Item.Header>
-                <Item.Description style={{ color: this.getAlertColor(this.state.quakeAlert), fontWeight: 'bold' }}>
-                  {this.state.quakeAlert === null ? "none" : this.state.quakeAlert}
-                </Item.Description>
-                  </Item.Content>
-                </Item> 
-              <Item>
-                <Item.Content>
-                <Item.Description as='a' content='Click to see event detail' href={this.state.quakeLink} target="_blank"></Item.Description>
-                  </Item.Content>
-                </Item>
-              {/* NEW ITEM: Distance Triage Badge */}
-              {this.state.quakeDistance !== null && (
-              <Item>
-                <Item.Content>
-                  <Item.Header>Proximity</Item.Header>
-                  <Item.Description style={{ 
-                    fontWeight: this.state.quakeDistance < 100 ? 'bold' : 'normal',
-                    color: this.state.quakeDistance < 100 ? '#dc2626' : 'inherit' 
-                }}>
-                  📍 {this.state.quakeDistance} miles from your location
-                    </Item.Description>
-                  </Item.Content>
-                </Item>
-              )}
+  marker={this.state.qMarker}
+  visible={this.state.showInfo}
+  onClose={() => this.setState({ showInfo: false })}
+>
+  {this.state.quakePl && (
+    <div style={{ minWidth: '220px', maxWidth: '280px', padding: '4px', fontFamily: 'system-ui, sans-serif' }}>
+      
+      {/* Header */}
+      <h3 style={{ margin: '0 0 8px 0', paddingBottom: '6px', borderBottom: '1px solid #ddd', fontSize: '16px', lineHeight: '1.3' }}>
+        Magnitude {this.state.quakeMag} <br/>
+        <span style={{ fontSize: '13px', fontWeight: 'normal', color: '#555' }}>
+          {this.state.quakePl}
+        </span>
+      </h3>
 
-              {/* NEW ITEM: Crowdsourced Reports & Tsunami Beacons */}
-              {(Boolean(this.state.quakeFeltCount) || this.state.quakeTsunamiFlag === 1) && (
-               <Item>
-                 <Item.Content>
-                  <Item.Header>Real-Time Impact Alerts</Item.Header>
-                  <Item.Description>
-                    {this.state.quakeFeltCount ? `💥 Felt by ${this.state.quakeFeltCount.toLocaleString()} people via "Did You Feel It?"` : ''} 
-                    {this.state.quakeTsunamiFlag === 1 && (
-                     <div style={{ color: '#dc2626', fontWeight: 'bold', marginTop: '5px' }}>
-                        ⚠️ WARNING: Tsunami advisory/watch active for this event
-                        </div>
-                    )}
-                  </Item.Description>
-                  </Item.Content>
-                </Item>
-              )}
-              </Item.Group>
-          </InfoWindow>
+      {/* Tsunami Warning Banner - Only renders if flag is active */}
+      {this.state.quakeTsunamiFlag === 1 && (
+         <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '6px', borderRadius: '4px', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', textAlign: 'center', border: '1px solid #f87171' }}>
+            ⚠️ Tsunami Advisory/Watch Active
+         </div>
+      )}
+      
+      {/* Data Rows */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+        <span style={{ fontWeight: '600', color: '#555' }}>Depth:</span>
+        <span style={{ color: this.getDepthColor(this.state.quakeDepth), fontWeight: 'bold' }}>
+          {this.state.quakeDepth} km
+        </span>
+      </div>
+      
+      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+        <span style={{ fontWeight: '600', color: '#555' }}>Alert Level:</span>
+        <span style={{ color: this.getAlertColor(this.state.quakeAlert), fontWeight: 'bold', textTransform: 'capitalize' }}>
+          {this.state.quakeAlert === null ? "None" : this.state.quakeAlert}
+        </span>
+      </div>
+
+      {/* Distance Triage - Always renders, shows fallback if GPS missing */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+        <span style={{ fontWeight: '600', color: '#555' }}>Proximity:</span>
+        <span style={{ 
+          fontWeight: this.state.quakeDistance && this.state.quakeDistance < 100 ? 'bold' : 'normal',
+          color: this.state.quakeDistance && this.state.quakeDistance < 100 ? '#dc2626' : 'inherit' 
+        }}>
+          {this.state.quakeDistance !== null ? `${this.state.quakeDistance} mi` : 'GPS Unavailable'}
+        </span>
+      </div>
+
+      {/* Felt Reports - Always renders, defaults to 0 if USGS says null */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+        <span style={{ fontWeight: '600', color: '#555' }}>Felt Reports:</span>
+        <span>{this.state.quakeFeltCount ? this.state.quakeFeltCount.toLocaleString() : '0'}</span>
+      </div>
+      
+      {/* Date */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '13px', color: '#777', marginTop: '8px' }}>
+        <span style={{ fontWeight: '600' }}>Time:</span>
+        {/* Your handleClick already formats this with toLocaleString() */}
+        <span>{this.state.quakeDate}</span> 
+      </div>
+      
+      {/* Link */}
+      {this.state.quakeLink && (
+        <div style={{ marginTop: '10px', textAlign: 'center' }}>
+          <a 
+            href={this.state.quakeLink} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ fontSize: '13px', color: '#0066cc', textDecoration: 'none' }}
+          >
+            View USGS Event Detail
+          </a>
+        </div>
+      )}
+    </div>
+  )}
+</InfoWindow>
       </Map>
     );
   }

@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import Navbar from './Navbar';
 import MapReports from './MapReports'
 import { addReport } from '../actions'
-import { Label, Icon, Menu, Popup, Button, Progress } from 'semantic-ui-react'
+import { Label, Icon, Menu, Popup, Button, Progress } from 'semantic-ui-react/dist/commonjs'
 
 class Reports extends Component {
   state = {

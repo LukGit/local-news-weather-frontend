@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import Navbar from './Navbar';
 import MapFireReports from './MapFireReports';
 import { addFireReport } from '../actions'; // Corrected action import
-import { Label, Icon, Menu, Checkbox, Popup } from 'semantic-ui-react';
+import { Label, Icon, Menu, Checkbox, Popup } from 'semantic-ui-react/dist/commonjs';
 
 const getDaysBurning = (timestamp) => {
   if (!timestamp || isNaN(timestamp)) return "Unknown";

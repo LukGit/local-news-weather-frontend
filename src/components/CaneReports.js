@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import Navbar from './Navbar';
 import MapCaneReports from './MapCaneReports'
 import { addCaneReport } from '../actions'
-import { Label, Icon, Menu, Checkbox, Modal, Button, Item, Popup } from 'semantic-ui-react'
+import { Label, Icon, Menu, Checkbox, Modal, Button, Item, Popup } from 'semantic-ui-react/dist/commonjs'
 
 class CaneReports extends Component {
   state = {
@@ -128,38 +128,71 @@ class CaneReports extends Component {
       .catch(err => console.error("Error fetching global storm forecast cones:", err));
   }
 
-  // NEW: Extracted Fetch Method
-  fetchAllHurricaneData = () => {
+  // NEW: Extracted Fetch Method to include HKO cyclone data
+fetchAllHurricaneData = () => {
     this.setState({ isLoading: true });
-    //const H_URL = "https://www.nhc.noaa.gov/CurrentStorms.json";
-// The browser thinks it's fetching from your own server, bypassing CORS completely
-    //const H_URL = "https://corsproxy.io/?" + encodeURIComponent("https://www.nhc.noaa.gov/CurrentStorms.json");
-    const H_URL = "/api/nhc/CurrentStorms.json";
 
-
-    fetch(H_URL)
-      .then(resp => resp.json())
-      .then(caneResp => {
-        this.props.addCaneReport(caneResp.activeStorms);
-        
-        // Capture timestamp
-        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-        this.setState({
-          centerGPS: this.props.gps,
-          filterHtsReports: this.props.c_reports,
-          sizeFilter: "All",
-          isLoading: false,        // Stop spinner
-          lastUpdated: timestamp  // Set timestamp
-        }, () => {
-          // Fire off track fetches asynchronously in the background
-          this.fetchStormTracks(caneResp.activeStorms);
-        });
-      })
+    // Fire both requests simultaneously
+    const fetchNOAA = fetch("/api/nhc/CurrentStorms.json")
+      .then(res => res.ok ? res.json() : {})
       .catch(err => {
-        console.error("Error fetching NOAA Hurricane data:", err);
-        this.setState({ isLoading: false });
+        console.error("NOAA Fetch Error:", err);
+        return {};
       });
+
+    const fetchHKO = fetch("/api/hko/CurrentStorms")
+      .then(res => res.ok ? res.json() : {})
+      .catch(err => {
+        console.error("HKO Fetch Error:", err);
+        return {};
+      });
+
+    // Wait for BOTH requests to finish before proceeding
+    Promise.all([fetchNOAA, fetchHKO]).then(results => {
+      const noaaData = results[0];
+      const hkoData = results[1];
+
+      // ==========================================
+      // 1. FORMAT NOAA
+      // ==========================================
+      const noaaStorms = noaaData.activeStorms || [];
+      if (this.fetchStormTracks) {
+        this.fetchStormTracks(noaaStorms);
+      }
+
+      // ==========================================
+      // 2. FORMAT HKO
+      // ==========================================
+      const rawHkoStorms = hkoData.activeStorms || [];
+      const hkoStorms = rawHkoStorms.map(storm => {
+        let mappedClass = "TD";
+        if (storm.intensity >= 74) mappedClass = "HU";
+        else if (storm.intensity >= 39) mappedClass = "TS";
+
+        return Object.assign({}, storm, { classification: mappedClass });
+      });
+      
+      const mergedPast = hkoData.pastTracks || {};
+      const mergedFuture = hkoData.futureTracks || {};
+
+      // ==========================================
+      // 3. MERGE & RENDER
+      // ==========================================
+      const combinedStorms = noaaStorms.concat(hkoStorms);
+      
+      console.log("🤝 MERGED STORMS TO RENDER:", combinedStorms);
+
+      // Dispatch to Redux
+      this.props.addCaneReport(combinedStorms);
+
+      // Update State safely
+      this.setState(prevState => ({
+        isLoading: false,
+        lastUpdated: new Date().toLocaleTimeString(),
+        pastTracks: Object.assign({}, prevState.pastTracks, mergedPast),
+        futureTracks: Object.assign({}, prevState.futureTracks, mergedFuture)
+      }));
+    });
   }
 
   componentDidMount () {
@@ -304,7 +337,7 @@ class CaneReports extends Component {
         </Menu>
         <div style={{ flex: 1, position: 'relative', width: '100%' }}>
         <MapCaneReports 
-          c_reports={this.state.filterHtsReports} 
+          c_reports={this.state.htsOnly ? this.state.filterHtsReports : this.props.c_reports} 
           gps={this.props.user.gps}
           pastTracks={this.state.pastTracks}
           futureTracks={this.state.futureTracks}

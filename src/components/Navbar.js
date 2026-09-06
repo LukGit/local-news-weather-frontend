@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { connect } from 'react-redux';
 //import { logoutUser } from '../actions';
 import { withRouter } from 'react-router-dom'
-import { Menu, Button, Icon, Popup } from 'semantic-ui-react'
+import { Menu, Button, Icon, Popup } from 'semantic-ui-react/dist/commonjs'
 
 
 class Navbar extends Component {

@@ -4,7 +4,7 @@ import caneS from '../img/hts24.png'
 import caneM from '../img/hts32.png'
 import caneL from '../img/hts48.png'
 import { withRouter } from 'react-router-dom'
-import { Item } from 'semantic-ui-react'
+//import { Item } from 'semantic-ui-react/dist/commonjs'
 
 
 export class MapCaneReports extends Component {
@@ -13,7 +13,7 @@ export class MapCaneReports extends Component {
     centerGPS: this.props.gps,
     filterReports: [],
     recenterGPS: {},
-    hMarker: "",
+    hMarker: null,
     showInfo: false,
     caneName: "",
     caneClass: "",
@@ -121,155 +121,164 @@ export class MapCaneReports extends Component {
   // center is to set the map center when map is recentered by a user click
   // Added new code to plot hurricane past and future tracks on the map 7/2/2026
   // Added new code to plot hurricane future path uncertainty cone on the map  7/14/2026
-  render() {
+render() {
+  
+  const formatShortDate = (isoString) => {
+    if (!isoString) return "Unknown";
+    const d = new Date(isoString);
+    // Outputs: "Sep 5, 19:58"
+    return d.toLocaleString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      hour: '2-digit', 
+      minute:'2-digit', 
+      hour12: false 
+    });
+  };
     return (
-      <Map google={this.props.google} 
-      zoom={4}
-      initialCenter={{lat: 24.64053936080381, lng: -93.95208035058195}}
-      center={this.state.recenterGPS}
-      onClick={this.onMapClick}
+      <Map 
+        google={this.props.google} 
+        zoom={4} 
+        initialCenter={{lat: 24.64053936080381, lng: -93.95208035058195}} 
+        center={this.state.recenterGPS} 
+        onClick={this.onMapClick} 
       >
-        {/* ADDED: Dynamic Forecast Cone Boundary Shading */}
+        {/* Forecast Cone Boundary Shading */}
         {this.props.c_reports.map(r => {
-          const conePath = this.props.conePolygons[r.id];
+          const conePath = this.props.conePolygons ? this.props.conePolygons[r.id] : null;
           if (!conePath || conePath.length === 0) return null;
-
+          
           return (
-            <Polygon
-              key={`cone-${r.id}`}
-              paths={conePath} // google-maps-react uses "paths" for polygons
-              strokeColor="#dc2626"
-              strokeOpacity={0.5}
-              strokeWeight={2}
-              fillColor="#dc2626"
-              fillOpacity={0.15} // Translucent caution overlay
-              geodesic={true}
-            />
+             <Polygon
+               key={`cone-${r.id}`}
+               paths={conePath}
+               strokeColor="#dc2626" // Restored red boundary
+               strokeOpacity={0.8}
+               strokeWeight={2}      // Slightly thicker boundary
+               fillColor="#dc2626"   // Transparent white fill
+               fillOpacity={0.15}
+             />
           );
         })}
-        {/* ADDED: Loop to draw the Past Tracks Line (Solid Black) */}
-        {this.props.c_reports.map(r => {
-          const pastPath = this.props.pastTracks[r.id];
-          if (!pastPath || pastPath.length === 0) return null;
 
-          // Clone path array so we don't accidentally mutate the underlying parent state
-          const connectedPastPath = [...pastPath];
-          // Connect the trail directly to the storm's current marker location
-          connectedPastPath.push({ lat: r.latitudeNumeric, lng: r.longitudeNumeric });
-
+        {/* Past Tracks */}
+        {this.props.pastTracks && Object.keys(this.props.pastTracks).map(stormId => {
+          const path = this.props.pastTracks[stormId];
+          if (!path || path.length === 0) return null;
+          
           return (
             <Polyline
-              key={`past-${r.id}`}
-              path={connectedPastPath}
+              key={`past-${stormId}`}
+              path={path}
               strokeColor="#000000"
               strokeOpacity={0.8}
-              strokeWeight={3}
-              geodesic={true}
+              strokeWeight={3} // Increased from 2 to 4
             />
           );
         })}
 
-        {/* ADDED: Loop to draw the Future Tracks Line (Solid Red) */}
-        {this.props.c_reports.map(r => {
-          const futurePath = this.props.futureTracks[r.id];
-          if (!futurePath || futurePath.length === 0) return null;
-
-          // Forecast data typically originates right at the current marker coordinate, 
-          // but we add it manually here as a safeguard to prevent gaps
-          const connectedFuturePath = [{ lat: r.latitudeNumeric, lng: r.longitudeNumeric }, ...futurePath];
-
+        {/* Future Tracks */}
+        {this.props.futureTracks && Object.keys(this.props.futureTracks).map(stormId => {
+          const path = this.props.futureTracks[stormId];
+          if (!path || path.length === 0) return null;
+          
           return (
             <Polyline
-              key={`future-${r.id}`}
-              path={connectedFuturePath}
+              key={`future-${stormId}`}
+              path={path}
               strokeColor="#dc2626"
-              strokeOpacity={0.9}
-              strokeWeight={3}
-              geodesic={true}
+              strokeOpacity={0.8}
+              strokeWeight={3} // Increased from 2 to 4
             />
           );
         })}
-      
-        {this.props.c_reports.map(r => {
-          let hIcon
-          let iconSize = 24; // Default baseline pixels for caneS
-          if (r.classification === "HU") {
-            hIcon = caneL
-            iconSize = 48
+
+        {/* Storm Markers */}
+        {this.props.c_reports.map((r, index) => {
+          let caneIcon;
+          let anchorPoint;
+
+          // Map NOAA classification directly to the correct icon and center anchor
+          if (r.classification === "HU" || r.classification === "TY") {
+            caneIcon = caneL; // 48px icon
+            anchorPoint = this.props.google ? new this.props.google.maps.Point(24, 24) : null;
           } else if (r.classification === "TS" || r.classification === "STS") {
-            hIcon = caneM
-            iconSize = 32
+            caneIcon = caneM; // 32px icon
+            anchorPoint = this.props.google ? new this.props.google.maps.Point(16, 16) : null;
           } else {
-            hIcon = caneS
-            iconSize = 24
+            // TD, STD, PTC, or unclassified
+            caneIcon = caneS; // 24px icon
+            anchorPoint = this.props.google ? new this.props.google.maps.Point(12, 12) : null;
           }
-          return <Marker
-          key={r.id}
-          name={r.id}
-          title={r.name}
-          position={{lat: r.latitudeNumeric, lng: r.longitudeNumeric}}
-          onClick={this.handleClick}
-          icon={{
-                url: hIcon,
-                // Scales the physical image footprint boundary
-                scaledSize: new this.props.google.maps.Size(iconSize, iconSize),
-                // Crucial fix: Sets the anchor map projection to exactly half the height/width to center icon on GPS location
-                anchor: new this.props.google.maps.Point(iconSize / 2, iconSize / 2)
-          }}
-          >
-          </Marker>
+
+          return (
+            <Marker
+              key={`marker-${r.id}`}
+              name={r.id}
+              icon={{ 
+                url: caneIcon,
+                anchor: anchorPoint // Restores center alignment over the track vertex
+              }}
+              position={{ lat: r.latitudeNumeric, lng: r.longitudeNumeric }}
+              title={r.name}
+              onClick={this.handleClick}
+            />
+          );
         })}
+
+
+        {/* Inside your InfoWindow block */}
         <InfoWindow
-          marker={this.state.hMarker}
-          visible={this.state.showInfo}
+  marker={this.state.hMarker}
+  visible={this.state.showInfo}
+  onClose={() => this.setState({ showInfo: false })}
+>
+  {this.state.caneName && (
+    <div style={{ minWidth: '220px', padding: '4px', fontFamily: 'system-ui, sans-serif' }}>
+      
+      {/* Header */}
+      <h3 style={{ margin: '0 0 8px 0', paddingBottom: '6px', borderBottom: '1px solid #ddd', fontSize: '16px' }}>
+        {this.state.caneName} <br/>
+        <span style={{ fontSize: '13px', fontWeight: 'normal', color: '#555' }}>{this.state.caneClass}</span>
+      </h3>
+      
+      {/* Data Rows */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+        <span style={{ fontWeight: '600', color: '#555' }}>Intensity:</span>
+        <span>{this.state.caneIntensity}</span>
+      </div>
+      
+      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+        <span style={{ fontWeight: '600', color: '#555' }}>Pressure:</span>
+        <span>{this.state.canePressure}</span>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+        <span style={{ fontWeight: '600', color: '#555' }}>Movement:</span>
+        <span>{this.state.caneSpeedDir}</span>
+      </div>
+      
+      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '13px', color: '#777', marginTop: '8px' }}>
+        <span style={{ fontWeight: '600' }}>Updated:</span>
+        <span>{formatShortDate(this.state.caneUpdated)}</span>
+      </div>
+      
+      {/* Advisory Link */}
+      {this.state.caneAdviceLink && (
+        <div style={{ marginTop: '10px', textAlign: 'center' }}>
+          <a 
+            href={this.state.caneAdviceLink} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ fontSize: '13px', color: '#0066cc', textDecoration: 'none' }}
           >
-            <Item.Group>
-              <Item>
-                <Item.Content>
-                <Item.Header>{this.state.caneName}</Item.Header>
-                  </Item.Content>
-                </Item>
-              <Item>
-                <Item.Content>
-                <Item.Header>Classification</Item.Header>
-                <Item.Description>{this.state.caneClass}</Item.Description>
-                  </Item.Content>
-                </Item>  
-              <Item>
-                <Item.Content>
-                <Item.Header>Intensity</Item.Header>
-                <Item.Description>{this.state.caneIntensity}</Item.Description>
-                  </Item.Content>
-                </Item>  
-              <Item>
-                <Item.Content>
-                <Item.Header>Air Pressure</Item.Header>
-                <Item.Description>{this.state.canePressure}</Item.Description>
-                  </Item.Content>
-                </Item> 
-              <Item>
-                <Item.Content>
-                <Item.Header>Speed/Direction</Item.Header>
-                <Item.Description>{this.state.caneSpeedDir}</Item.Description>
-                  </Item.Content>
-                </Item>
-              <Item>
-                <Item.Content>
-                <Item.Description as='a' content='Click to see advisory' href={this.state.caneAdviceLink} target="_blank"></Item.Description>
-                  </Item.Content>
-                </Item>
-              <Item>
-                <Item.Content>
-                <Item.Description as='a' content='Click to see detail forecast' href={this.state.caneForecastLink} target="_blank"></Item.Description>
-                  </Item.Content>
-                </Item>
-              <Item>
-                <Item.Content>
-                <Item.Description>Update: {this.state.caneUpdated}</Item.Description>
-                  </Item.Content>
-                </Item>
-              </Item.Group>
-          </InfoWindow>
+            View Official Advisory
+          </a>
+        </div>
+      )}
+    </div>
+  )}
+</InfoWindow>
       </Map>
     );
   }

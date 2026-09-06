@@ -237,23 +237,33 @@ const get24HourOpacity = (timestampStr, minOpacity = 0.20) => {
         visible={this.state.showingInfoWindow}
         onClose={this.onInfoWindowClose}
       >
-        <div style={{ padding: '4px', maxWidth: '280px' }}>
-          {this.state.selectedReport && (
-            <>
-              <h4 style={{ margin: '0 0 6px 0', color: '#D9534F' }}>
-                {this.state.selectedReport.title}
-              </h4>
-              {this.state.selectedReport.area && (
-                <p style={{ margin: '0 0 6px 0', fontWeight: 'bold', fontSize: '0.85rem' }}>
-                  📍 {this.state.selectedReport.area}
-                </p>
-              )}
-              <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: '1.3' }}>
+        {this.state.selectedReport && (
+          <div style={{ minWidth: '220px', maxWidth: '280px', padding: '4px', fontFamily: 'system-ui, sans-serif' }}>
+            
+            {/* Header - Kept the red alert color but matched the font sizing/borders */}
+            <h3 style={{ margin: '0 0 8px 0', paddingBottom: '6px', borderBottom: '1px solid #ddd', fontSize: '16px', lineHeight: '1.3', color: '#dc2626' }}>
+              {this.state.selectedReport.title}
+            </h3>
+
+            {/* Data Rows */}
+            {this.state.selectedReport.area && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+                <span style={{ fontWeight: '600', color: '#555', flexShrink: 0 }}>Location:</span>
+                <span style={{ fontWeight: 'bold', textAlign: 'right', marginLeft: '12px' }}>
+                  {this.state.selectedReport.area}
+                </span>
+              </div>
+            )}
+            
+            {/* Summary Text Block */}
+            {this.state.selectedReport.summary && (
+              <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dotted #ccc', fontSize: '13px', lineHeight: '1.4', color: '#333' }}>
                 {this.state.selectedReport.summary}
-              </p>
-            </>
-          )}
-        </div>
+              </div>
+            )}
+
+          </div>
+        )}
       </InfoWindow>
       </Map>
     );
