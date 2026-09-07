@@ -256,7 +256,24 @@ fetchAllHurricaneData = () => {
     })
   }
   
-  render() {
+render() {
+    // 1. Determine which storms should be visible based on the checkbox state
+    const activeReports = this.state.htsOnly ? this.state.filterHtsReports : this.props.c_reports;
+
+    // 2. Extract an array of just the active storm IDs for easy matching
+    const activeStormIds = activeReports.map(storm => storm.id);
+
+    // 3. Build new track objects containing ONLY the data for the active storm IDs
+    const filteredPastTracks = {};
+    const filteredFutureTracks = {};
+    const filteredConePolygons = {};
+
+    activeStormIds.forEach(id => {
+      if (this.state.pastTracks[id]) filteredPastTracks[id] = this.state.pastTracks[id];
+      if (this.state.futureTracks[id]) filteredFutureTracks[id] = this.state.futureTracks[id];
+      if (this.state.conePolygons[id]) filteredConePolygons[id] = this.state.conePolygons[id];
+    });
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
         {/* Wire up Navbar props */}
@@ -337,11 +354,11 @@ fetchAllHurricaneData = () => {
         </Menu>
         <div style={{ flex: 1, position: 'relative', width: '100%' }}>
         <MapCaneReports 
-          c_reports={this.state.htsOnly ? this.state.filterHtsReports : this.props.c_reports} 
+          c_reports={activeReports} 
           gps={this.props.user.gps}
-          pastTracks={this.state.pastTracks}
-          futureTracks={this.state.futureTracks}
-          conePolygons={this.state.conePolygons}
+          pastTracks={filteredPastTracks}
+          futureTracks={filteredFutureTracks}
+          conePolygons={filteredConePolygons}
         />
         </div>
       </div>

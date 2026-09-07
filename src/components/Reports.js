@@ -7,7 +7,7 @@ import { Label, Icon, Menu, Popup, Button, Progress } from 'semantic-ui-react/di
 
 class Reports extends Component {
   state = {
-    centerGPS: {lat: 41.8781, lng: -87.6298},
+    //centerGPS: {lat: 41.8781, lng: -87.6298},
     poopSizeSelect: "",
     filterReports: [],
     largeOnly: false,
@@ -23,6 +23,8 @@ class Reports extends Component {
     lastUpdated: null, // NEW
     // NEW STATES FOR ANIMATION
     activeIndex: null,
+    // Initialize directly from storage so it's never null on the first render
+    centerGPS: JSON.parse(sessionStorage.getItem('last_known_gps')) || null,
     isPlaying: false
   }
     // Extracted fetch logic
@@ -76,12 +78,13 @@ class Reports extends Component {
       navigator.geolocation.getCurrentPosition(
       (position) => {
         console.log("GPS Success:", position.coords.latitude, position.coords.longitude);
-        this.setState({
-          centerGPS: {
+        const newGPS = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
-          }
-        });
+          };
+        // 2. Update state and save the successful lock to storage
+          this.setState({ centerGPS: newGPS });
+          sessionStorage.setItem('last_known_gps', JSON.stringify(newGPS));
       },
       (error) => {
         console.error("GPS Failed/Denied, code:", error.code, "message:", error.message);
@@ -91,9 +94,7 @@ class Reports extends Component {
   } else {
     console.warn("Geolocation is not supported by this browser.");
   }
-
-  
-  }
+}
 
   handleMg = (e) => {
   this.setState({
