@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 //import { logoutUser } from '../actions';
 import { withRouter } from 'react-router-dom'
 import { Menu, Button, Icon, Popup } from 'semantic-ui-react/dist/commonjs'
+import TabInfoModal from './TabInfoModal';
 
 
 class Navbar extends Component {
@@ -19,6 +20,11 @@ class Navbar extends Component {
  render() {
     // Grab the current path so the menu knows which tab is active
     const currentPath = window.location.pathname;
+    // Map the URL path to the specific tab config string
+    let activeTabType = 'earthquake'; // Default fallback
+    if (currentPath.includes('/hurricanes')) activeTabType = 'hurricane';
+    if (currentPath.includes('/tornadoes')) activeTabType = 'tornado';
+    if (currentPath.includes('/wildfires')) activeTabType = 'wildfire';
 
     return (
       <Menu id="menu-head" color="teal" size="huge" inverted style={{ margin: 0, borderRadius: 0, flexShrink: 0, minHeight: 'auto'}}>
@@ -56,6 +62,10 @@ class Navbar extends Component {
         </Menu.Item>
         {/* NEW: Right-aligned menu for the refresh button */}
         <Menu.Menu position='right'>
+          {/* NEW: The Info Modal Button */}
+          <Menu.Item>
+            <TabInfoModal tabType={activeTabType} />
+          </Menu.Item>
           
           {/* We only render the button if the parent actually passed an onRefresh function */}
           {this.props.onRefresh && (
