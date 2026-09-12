@@ -25,6 +25,7 @@ class Navbar extends Component {
     if (currentPath.includes('/hurricanes')) activeTabType = 'hurricane';
     if (currentPath.includes('/tornadoes')) activeTabType = 'tornado';
     if (currentPath.includes('/wildfires')) activeTabType = 'wildfire';
+    if (currentPath.includes('/floods')) activeTabType = 'flood'; // NEW
 
     return (
       <Menu id="menu-head" color="teal" size="huge" inverted style={{ margin: 0, borderRadius: 0, flexShrink: 0, minHeight: 'auto'}}>
@@ -60,13 +61,22 @@ class Navbar extends Component {
         >
           Wildfires
         </Menu.Item>
-        {/* NEW: Right-aligned menu for the refresh button */}
+        
+        {/* NEW: Floods Tab */}
+        <Menu.Item 
+          as={Link} 
+          to="/floods" 
+          active={currentPath === '/floods'} 
+          color="orange"
+        >
+          Floods
+        </Menu.Item>
+          {/* NEW: Right-aligned menu for the refresh button */}
         <Menu.Menu position='right'>
           {/* NEW: The Info Modal Button */}
           <Menu.Item>
             <TabInfoModal tabType={activeTabType} />
           </Menu.Item>
-          
           {/* We only render the button if the parent actually passed an onRefresh function */}
           {this.props.onRefresh && (
             <Menu.Item>

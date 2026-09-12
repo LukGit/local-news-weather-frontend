@@ -30,7 +30,7 @@ const TAB_CONFIGS = {
     sources: [{ name: 'NOAA Storm Prediction Center / NWS', desc: 'Active warnings and confirmed touchdowns (past 24 hours).' }],
     rules: [
       'Temporal Decay: Warning polygons and touchdown icons progressively fade in opacity over 24 hours.',
-      'Geospatial Polygons: Zooming into reports renders active warning boundary shapes outlining impact zones.',
+      'Auto-Zoom Polygons: Clicking a marker automatically zooms the map to frame active warning boundary shapes outlining impact zones.',
       'Telemetry Popups: Selecting an icon displays localized touchdown times and damage assessments.'
     ]
   },
@@ -42,8 +42,19 @@ const TAB_CONFIGS = {
       'Perimeter Sizing: Icon size scales proportionally to active uncontained burned acreage.',
       'Containment Decay: Markers fade in opacity as containment percentages increase.',
       'Peak Cost Indicator: Bouncing icon highlights the single most financially intensive active fire.',
-      'Burned Polygons & Wind Vectors: Close zoom levels render multi-polygon perimeters and local wind directions/strengths.',
+      'Auto-Zoom Polygons & Vectors: Clicking a marker automatically zooms to reveal multi-polygon burn perimeters and local wind data.',
       'Initial Load Notice: Federal satellite payload ingestion takes ~30 seconds on initial load.'
+    ]
+  },
+  flood: {
+    title: 'Global Flood Event Legend',
+    color: 'blue',
+    sources: [{ name: 'GDACS API', desc: 'Global disaster alerts and satellite-derived inundation mapping.' }],
+    rules: [
+      'Severity Classification: Icon size and color scale dynamically based on GDACS alert levels (Green, Orange, Red).',
+      'Auto-Zoom Polygons: Clicking a marker automatically zooms the map to render satellite-derived flooded area boundaries (when available).',
+      'Historical Timeframe Slider: Interactively filter visible flood events from the past 1 to 365 days.',
+      'Severity Filter: Toggle switch isolates critical events by suppressing minor (Green) alerts.'
     ]
   }
 };

@@ -56,13 +56,24 @@ function tornadoReportsReducer(state = [], action) {
       return state;
   }
 }
+
+// NEW: Water/Flood Reports Reducer
+function waterReportsReducer(state = [], action) {
+    switch (action.type) {
+        case "ADD_WATER_REPORT":
+            return [...action.w_reports];
+        default:
+            return state;
+    }
+}
 // 3. COMBINE & EXPORT AT THE BOTTOM
 const rootReducer = combineReducers({
   users: usersReducer,
   reports: reportsReducer,
   c_reports: caneReportsReducer,
   f_reports: fireReportsReducer,
-  t_reports: tornadoReportsReducer
+  t_reports: tornadoReportsReducer,
+  w_reports: waterReportsReducer // NEW
 });
 
 export default rootReducer;

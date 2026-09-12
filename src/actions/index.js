@@ -25,3 +25,7 @@ export const setUserGps = (gps) => {
 export const addTornadoReport = t_reports => {
     return { type: 'ADD_TORNADO_REPORT', t_reports };
 };
+// NEW: Add the water report action
+export const addWaterReport = w_reports => {
+    return { type: 'ADD_WATER_REPORT', w_reports };
+};

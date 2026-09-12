@@ -5,6 +5,7 @@ import Reports from './components/Reports'
 import CaneReports from './components/CaneReports'
 import FireReports from './components/FireReports'
 import TornadoReports from './components/TornadoReports'
+import WaterReports from './components/WaterReports'; // NEW: Import the floods component
 
 const App = () => {
   return (
@@ -15,6 +16,7 @@ const App = () => {
         <Route path={'/hurricanes'} component={CaneReports} />
         <Route path={'/wildfires'} component={FireReports} />
         <Route path={'/tornadoes'} component={TornadoReports} />
+        <Route path={'/floods'} component={WaterReports} /> {/* NEW: Floods Route */}
         <Route path={'/'} component={Reports} />
       </Switch>
       </BrowserRouter>

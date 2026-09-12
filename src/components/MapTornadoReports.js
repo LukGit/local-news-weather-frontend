@@ -82,7 +82,9 @@ class MapTornadoReports extends Component {
     this.setState({
       selectedReport: report,
       activeMarker: marker,
-      showingInfoWindow: true
+      showingInfoWindow: true,
+      recenterGPS: props.position,
+      currentZoom: this.state.currentZoom < 9 ? 9 : this.state.currentZoom
     });
   };
 
@@ -134,9 +136,10 @@ const get24HourOpacity = (timestampStr, minOpacity = 0.20) => {
     return (
       <Map
         google={google}
-        zoom={currentZoom}
+        zoom={this.state.currentZoom}
         initialCenter={gps}
         onZoomChanged={this.handleZoomChanged}
+        center={this.state.recenterGPS || gps} // ADD THIS LINE
         onClick={this.onMapClick}
         style={{ width: '100%', height: '100%' }}
       >

@@ -33,7 +33,7 @@ export class MapFireReports extends Component {
   
   // ADDED: Listener to capture zoom changes dynamically
   handleZoomChanged = (mapProps, map) => {
-    if (map) {
+    if (map && map.getZoom() !== this.state.currentZoom) {
       this.setState({ currentZoom: map.getZoom() });
     }
   }
@@ -52,7 +52,8 @@ export class MapFireReports extends Component {
       rawCostToDate: props.fire.rawCostToDate,
       rawFinalCost: props.fire.rawFinalCost,
       showInfo: true,
-      recenterGPS: props.position // Centers map on the fire when clicked
+      recenterGPS: props.position, // Centers map on the fire when clicked
+      currentZoom: this.state.currentZoom < 9 ? 9 : this.state.currentZoom
     });
   }
 
@@ -76,8 +77,8 @@ export class MapFireReports extends Component {
 
   handleMapIdle = async (mapProps, map) => {
     // STEP 1: The Zoom Gate
-    // If we are zoomed out (less than 10), clear the wind arrows and stop.
-    if (map.getZoom() < 10) {
+    // If we are zoomed out (less than 9), clear the wind arrows and stop.
+    if (map.getZoom() < 9) {
         if (this.state.windVectors.length > 0) {
             this.setState({ windVectors: [] });
         }
@@ -210,7 +211,7 @@ export class MapFireReports extends Component {
     return (
       <Map 
         google={this.props.google} 
-        zoom={5} 
+        zoom={this.state.currentZoom} 
         initialCenter={{lat: 39.8283, lng: -98.5795}} // Adjusted to center of the US
         center={this.state.recenterGPS}
         onClick={this.onMapClick}
