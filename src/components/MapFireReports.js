@@ -221,6 +221,8 @@ export class MapFireReports extends Component {
         {/* ADDED: Burn Perimeter Layer (Renders only when zoomed in >= 9) */}
         {/* Burn Perimeter Layer (Renders all rings for MultiPolygon fires) */}
         {showPerimeters && this.props.f_reports && this.props.f_reports.map(fire => {
+          if (!this.state.fireName || this.state.fireName !== fire.name) return null;
+
           if (!fire.perimeterRings || fire.perimeterRings.length === 0) return null;
 
           return fire.perimeterRings.map((ringCoords, ringIdx) => (
