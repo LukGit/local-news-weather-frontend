@@ -1,43 +1,72 @@
-# The Natual Disaster Tracker
-![alt text](https://user-images.githubusercontent.com/60716393/110196818-aea9c100-7e0c-11eb-8ae6-0d4e19d26cc6.png)
-![alt text](https://user-images.githubusercontent.com/60716393/110196769-5e326380-7e0c-11eb-98ab-a4f1151bec6f.png)
-This is an app for users to have a quick glance of natual disasters around the globe. The earthquake button displays a page that shows significant earthquakes witin the past 24hrs, accroding to data from US Geological Survey (USGS). A map displays icons of various sizes representing quakes of various magnitudes. Only quakes with magnitude over 4 are displayed. When user clicks on the quake marker, it will show the detail information of the quake. The hurricane button displays a page that shows active tropical cyclones, according data from National Hurricane Center. A map displays icons of cyclones of various classifications, from hurricanes to tropical depressions. When clicking on the hurricane marker, it will show the details information of the cyclone.
+# Real-Time Global Natural Disaster Tracker
 
-## Technical information
+An interactive geospatial telemetry dashboard built to visualize real-time global natural hazards for environmental science education, spatial analysis, and emergency tracking.
 
-The app's frontend is built in JavaScript with React/Redux framework. The backend is Ruby on Rails with a PostgreSQL DB. All map rendering is done using Google Maps React. JSON web token is also implemented for user authentication. Styling is impleneted using Sematic UI React with some CSS. 
+![Natural Disaster Tracker Dashboard](https://user-images.githubusercontent.com/60716393/110196818-aea9c100-7e0c-11eb-8ae6-0d4e19d26cc6.png)
 
-## General operation
+## Overview
 
-Once logged in, users are greeted with a local map showing markers respresenting the earthquake locations around the world. Map is automatically centered based on the registered zipcode of the user. A pop-up info window is displayed with detail quake information when a map marker is clicked on. The detail pop-up also contain a link to the USGS detail page. Clicking on the link will open a new tab to the event page. When clicking on the hurricane button on the menu bar, user is shown a map with active tropical cyclones. A pop-up infor window is display with detail cyclone information when a map marker is clicked on. The detail pop-up also contains links to advisory and forecast pages on the NOAA site. Clicking on the links will open a new tab to the relevant NOAA pages. User can also check local weather condition and forecast by clicking the weather button.
+The Natural Disaster Tracker ingests live scientific feeds across five specialized environmental domain tabs. The application processes complex spatial datasets (GeoJSON, vector paths, active warning perimeters) into interactive Google Maps layers with custom scaling, temporal opacity decay, and automated viewport management.
 
+### Key Features & Modules
 
-## Technical Notes
+* **Earthquake Monitor:** Ingests live USGS GeoJSON feeds (M4.0+ past 72 hours). Features magnitude-proportional marker scaling, time-based visual decay, interactive Richter threshold filtering, and sequential chronological timeline playback.
+* **Tropical Cyclones & Track Analysis:** Ingests dual advisories from NOAA NHC and the Hong Kong Observatory (HKO). Visualizes active storms, historical track vectors, red forecast trajectories, and 3-to-5 day 67% probability uncertainty cones.
+* **Tornado & Severe Weather:** Visualizes active NWS touchdowns and warning shapes (past 24 hours) with progressive opacity fading and detailed localized telemetry popups.
+* **Wildfires & Thermal Anomalies:** Ingests NASA FIRMS and NIFC satellite feeds for US wildfires (>500 acres). Features active containment decay, peak financial cost indicators, live local wind vector overlays, and active-only multi-polygon burn perimeters on close zoom.
+* **Global Floods & NWS Warnings:** Integrates GDACS global flood alert levels alongside live US National Weather Service (NWS) flood and flash flood warning polygons with dynamic auto-zoom functionality.
+* **Local Weather & Geolocation:** Geolocation-aware centering with fallback logic, providing live local conditions, hourly trends, and multi-day weather forecasts via WeatherAPI.
 
-In order to use Google Maps, all components must be first imported from google-map-reacts: 
+---
 
-```javascript
-import {Map, InfoWindow, Marker, GoogleApiWrapper } from 'google-maps-react';
-```
-An API key obtained in your google account must also be specified in the same container where map and its components are used:
-```javascript
-export default GoogleApiWrapper({
-  apiKey: 'your-api-key-from-google'
-})(MapContainer)
-```
-In order to use Sematic UI react, the following must be specified in the index.html file:
-```html
-<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css" />
-```
+## Technical Architecture
 
-There is a CORS problem with the NOAA end point. This is circumvented using Moesif Origin & CORS Changer which is a plugin that allows you to send cross-domain requests. You can also override Request Origin and CORS headers. The extenion on Chrome must be turned on in order for this to work.
+* **Frontend:** React (Class Components with robust lifecycle unmount guards), Redux (standardized multi-key state structure), Semantic UI React.
+* **Geospatial & Mapping:** Google Maps API (`google-maps-react`) with custom Polygon, Polyline, and Marker rendering layers.
+* **Backend / API Services:** Express/Node.js API proxy layers handling external CORS headers, payload normalization, and cache management.
+* **Deployment:** Vercel serverless platform.
 
-## Extermal API
+---
 
-Earthquake data is obtained from the USGS API site. Use this link: "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2021-02-25&endtime=2021-02-26&eventtype=earthquake&minmagnitude=4"
+## Technical Setup & Installation
 
-Hurricane data is obtained from the NOAA API site at: "https://www.nhc.noaa.gov/CurrentStorms.json". 
+### Prerequisites
 
-In order to obtain current weather condition via Weather API, use this link: "https://api.weatherapi.com/v1/forecast.json?key=apikey&q=zip" (substitute apikey with your own key and zip with zip code in decimal)
-```
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+* Node.js (v14+ recommended)
+* A Google Maps JavaScript API Key (with Geocoding API enabled)
+
+### Local Development
+
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/your-username/natural-disaster-tracker.git](https://github.com/your-username/natural-disaster-tracker.git)
+   cd natural-disaster-tracker
+
+2. **Install dependencies:**
+    Bash
+    npm install
+
+3. **Configure Environment Variables:**
+    Create a .env file in the root directory and add your API keys:
+    Code snippet
+    REACT_APP_GOOGLE_API_KEY=your_google_maps_api_key
+    REACT_APP_WEATHER_API_KEY=your_weather_api_key
+
+4. **Start the local Vercel development environment::**
+    npm vercel dev
+    Open http://localhost:3000 to view the application in your browser.
+    Note: Using npx vercel dev instead of npm start is required locally to execute Vercel serverless API routes, which proxy live data payloads and eliminate browser CORS errors.
+
+### Data Sources & Scientific Attribution
+
+* Seismic Telemetry: United States Geological Survey (USGS) GeoJSON API
+* Tropical Advisories: NOAA National Hurricane Center (NHC) & Hong Kong Observatory (HKO)
+* Severe Weather & Flood Warnings: National Weather Service (NWS) / NOAA CAP Feeds
+* Global Flood Tracking: Global Disaster Alert and Coordination System (GDACS)
+* Thermal Anomalies & Wildfires: NASA FIRMS & National Interagency Fire Center (NIFC)
+* Meteorological Forecasts: WeatherAPI
+
+### Authorship & Acknowledgments
+
+  Author: Ivan Luk — Full-Stack Software Engineer
+  Tooling & Assistance: Built and refactored with assistance from Google Gemini as an AI technical collaborator for code optimization, spatial data integration, and state management debugging.

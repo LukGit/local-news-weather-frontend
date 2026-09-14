@@ -139,6 +139,7 @@ class WaterReports extends Component {
         <Menu inverted color='grey' size='mini' style={{ margin: 0, borderRadius: 0, flexShrink: 0, minHeight: 'auto'}}>
           {/* Source Toggle Controls */}
           <Menu.Item style={{ padding: '4px 8px' }}>
+            <Popup content='Choose world events or US warnings' trigger={
             <Button.Group size='mini'>
               <Button 
                 color={this.state.activeSource === 'GDACS' ? 'blue' : 'grey'} 
@@ -154,6 +155,7 @@ class WaterReports extends Component {
                 US Active (NWS)
               </Button>
             </Button.Group>
+            }/>
           </Menu.Item>
 
           <Menu.Item>

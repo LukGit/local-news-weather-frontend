@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Modal, Header, List, Segment, Message, Icon, Popup } from 'semantic-ui-react/dist/commonjs';
+import { Button, Modal, Header, List, Segment, Message, Icon, Popup, Divider } from 'semantic-ui-react/dist/commonjs';
 
 const TAB_CONFIGS = {
   earthquake: {
@@ -114,6 +114,29 @@ const TabInfoModal = ({ tabType }) => {
           <Message info size="tiny">
             <strong>Global Refresh:</strong> Clicking the refresh button on the top menu bar triggers an immediate force sync of fresh live payloads across all 4 disaster tabs.
           </Message>
+
+          <Divider section />
+
+          {/* AUTHORSHIP & PROJECT METADATA */}
+          <Segment style={{ backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+            <Header as="h5" style={{ margin: '0 0 6px 0', color: '#374151' }}>
+              <Icon name="code branch" /> About This Project
+            </Header>
+            <p style={{ fontSize: '12px', color: '#4b5563', lineHeight: '1.4', margin: '0 0 8px 0' }}>
+              Engineered as an open-access interactive dashboard visualizing live real-time geospatial telemetry for earth science education, spatial analysis, and hazard tracking. Built with React, Redux, Node.js, and Google Maps API.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#6b7280', paddingTop: '6px', borderTop: '1px dotted #d1d5db' }}>
+              <span><strong>Author:</strong> Ivan Luk</span>
+              <a 
+                href="https://www.linkedin.com/in/ivan-luk-dev" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                style={{ color: '#0284c7', fontWeight: '600', textDecoration: 'none' }}
+              >
+                <Icon name="linkedin" /> Connect on LinkedIn
+              </a>
+            </div>
+          </Segment>
         </Modal.Content>
         <Modal.Actions>
           <Button color="teal" onClick={() => setOpen(false)}>
