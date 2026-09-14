@@ -229,56 +229,57 @@ render() {
 
         {/* Inside your InfoWindow block */}
         <InfoWindow
-  marker={this.state.hMarker}
-  visible={this.state.showInfo}
-  onClose={() => this.setState({ showInfo: false })}
->
-  {this.state.caneName && (
-    <div style={{ minWidth: '220px', padding: '4px', fontFamily: 'system-ui, sans-serif' }}>
-      
-      {/* Header */}
-      <h3 style={{ margin: '0 0 8px 0', paddingBottom: '6px', borderBottom: '1px solid #ddd', fontSize: '16px' }}>
-        {this.state.caneName} <br/>
-        <span style={{ fontSize: '13px', fontWeight: 'normal', color: '#555' }}>{this.state.caneClass}</span>
-      </h3>
-      
-      {/* Data Rows */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
-        <span style={{ fontWeight: '600', color: '#555' }}>Intensity:</span>
-        <span>{this.state.caneIntensity}</span>
-      </div>
-      
-      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
-        <span style={{ fontWeight: '600', color: '#555' }}>Pressure:</span>
-        <span>{this.state.canePressure}</span>
-      </div>
+      marker={this.state.hMarker}
+      visible={this.state.showInfo}
+      onClose={() => this.setState({ showInfo: false })}
+    >
+      <div style={{ minWidth: '220px', padding: '4px', fontFamily: 'system-ui, sans-serif' }}>
+        {this.state.caneName ? (
+          <>
+            {/* Header */}
+            <h3 style={{ margin: '0 0 8px 0', paddingBottom: '6px', borderBottom: '1px solid #ddd', fontSize: '16px' }}>
+              {this.state.caneName} <br/>
+              <span style={{ fontSize: '13px', fontWeight: 'normal', color: '#555' }}>{this.state.caneClass}</span>
+            </h3>
+            
+            {/* Data Rows */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+              <span style={{ fontWeight: '600', color: '#555' }}>Intensity:</span>
+              <span>{this.state.caneIntensity}</span>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+              <span style={{ fontWeight: '600', color: '#555' }}>Pressure:</span>
+              <span>{this.state.canePressure}</span>
+            </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
-        <span style={{ fontWeight: '600', color: '#555' }}>Movement:</span>
-        <span>{this.state.caneSpeedDir}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+              <span style={{ fontWeight: '600', color: '#555' }}>Movement:</span>
+              <span>{this.state.caneSpeedDir}</span>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '13px', color: '#777', marginTop: '8px' }}>
+              <span style={{ fontWeight: '600' }}>Updated:</span>
+              <span>{formatShortDate(this.state.caneUpdated)}</span>
+            </div>
+            
+            {/* Advisory Link */}
+            {this.state.caneAdviceLink && (
+              <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                <a 
+                  href={this.state.caneAdviceLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ fontSize: '13px', color: '#0066cc', textDecoration: 'none' }}
+                >
+                  View Official Advisory
+                </a>
+              </div>
+            )}
+          </>
+        ) : null}
       </div>
-      
-      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '13px', color: '#777', marginTop: '8px' }}>
-        <span style={{ fontWeight: '600' }}>Updated:</span>
-        <span>{formatShortDate(this.state.caneUpdated)}</span>
-      </div>
-      
-      {/* Advisory Link */}
-      {this.state.caneAdviceLink && (
-        <div style={{ marginTop: '10px', textAlign: 'center' }}>
-          <a 
-            href={this.state.caneAdviceLink} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            style={{ fontSize: '13px', color: '#0066cc', textDecoration: 'none' }}
-          >
-            View Official Advisory
-          </a>
-        </div>
-      )}
-    </div>
-  )}
-</InfoWindow>
+    </InfoWindow>
       </Map>
     );
   }

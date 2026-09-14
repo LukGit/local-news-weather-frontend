@@ -240,33 +240,33 @@ const get24HourOpacity = (timestampStr, minOpacity = 0.20) => {
         visible={this.state.showingInfoWindow}
         onClose={this.onInfoWindowClose}
       >
-        {this.state.selectedReport && (
-          <div style={{ minWidth: '220px', maxWidth: '280px', padding: '4px', fontFamily: 'system-ui, sans-serif' }}>
-            
-            {/* Header - Kept the red alert color but matched the font sizing/borders */}
-            <h3 style={{ margin: '0 0 8px 0', paddingBottom: '6px', borderBottom: '1px solid #ddd', fontSize: '16px', lineHeight: '1.3', color: '#dc2626' }}>
-              {this.state.selectedReport.title}
-            </h3>
+        <div style={{ minWidth: '220px', maxWidth: '280px', padding: '4px', fontFamily: 'system-ui, sans-serif' }}>
+          {this.state.selectedReport ? (
+            <>
+              {/* Header */}
+              <h3 style={{ margin: '0 0 8px 0', paddingBottom: '6px', borderBottom: '1px solid #ddd', fontSize: '16px', lineHeight: '1.3', color: '#dc2626' }}>
+                {this.state.selectedReport.title}
+              </h3>
 
-            {/* Data Rows */}
-            {this.state.selectedReport.area && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
-                <span style={{ fontWeight: '600', color: '#555', flexShrink: 0 }}>Location:</span>
-                <span style={{ fontWeight: 'bold', textAlign: 'right', marginLeft: '12px' }}>
-                  {this.state.selectedReport.area}
-                </span>
-              </div>
-            )}
-            
-            {/* Summary Text Block */}
-            {this.state.selectedReport.summary && (
-              <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dotted #ccc', fontSize: '13px', lineHeight: '1.4', color: '#333' }}>
-                {this.state.selectedReport.summary}
-              </div>
-            )}
-
-          </div>
-        )}
+              {/* Data Rows */}
+              {this.state.selectedReport.area && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+                  <span style={{ fontWeight: '600', color: '#555', flexShrink: 0 }}>Location:</span>
+                  <span style={{ fontWeight: 'bold', textAlign: 'right', marginLeft: '12px' }}>
+                    {this.state.selectedReport.area}
+                  </span>
+                </div>
+              )}
+              
+              {/* Summary Text Block */}
+              {this.state.selectedReport.summary && (
+                <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dotted #ccc', fontSize: '13px', lineHeight: '1.4', color: '#333' }}>
+                  {this.state.selectedReport.summary}
+                </div>
+              )}
+            </>
+          ) : null}
+        </div>
       </InfoWindow>
       </Map>
     );

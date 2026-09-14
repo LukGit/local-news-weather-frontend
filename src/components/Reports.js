@@ -23,8 +23,8 @@ class Reports extends Component {
     lastUpdated: null, // NEW
     // NEW STATES FOR ANIMATION
     activeIndex: null,
-    // Initialize directly from storage so it's never null on the first render
-    centerGPS: JSON.parse(sessionStorage.getItem('last_known_gps')) || null,
+    // FIX: Remove 'null'. Provide a hard fallback if storage is empty.
+    centerGPS: JSON.parse(sessionStorage.getItem('last_known_gps')) || { lat: 41.8781, lng: -87.6298 }, 
     isPlaying: false
   }
     // Extracted fetch logic
@@ -72,6 +72,7 @@ class Reports extends Component {
 
   componentDidMount () {
     // Execute on initial load
+    this._isMounted = true;
     this.fetchEarthquakeData();
 
     if (navigator.geolocation) {
@@ -95,6 +96,10 @@ class Reports extends Component {
     console.warn("Geolocation is not supported by this browser.");
   }
 }
+
+componentWillUnmount() {
+    this._isMounted = false;
+  }
 
   handleMg = (e) => {
   this.setState({

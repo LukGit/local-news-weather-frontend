@@ -129,7 +129,12 @@ class FireReports extends Component {
   }
 
   componentDidMount() {
+    this._isMounted = true;
     this.fetchActiveWildfires();
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   render() {

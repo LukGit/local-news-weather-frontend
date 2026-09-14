@@ -291,58 +291,61 @@ export class MapFireReports extends Component {
 
         {/* Simplified InfoWindow for Fires */}
         <InfoWindow
-          marker={this.state.activeMarker}
-          visible={this.state.showInfo}
-          onClose={() => this.setState({ showInfo: false })}
-        >
-          {this.state.fireName && (
-            <div style={{ minWidth: '220px', maxWidth: '280px', padding: '4px', fontFamily: 'system-ui, sans-serif' }}>
-              
-              {/* Header */}
-              <h3 style={{ margin: '0 0 8px 0', paddingBottom: '6px', borderBottom: '1px solid #ddd', fontSize: '16px', lineHeight: '1.3' }}>
-                {this.state.fireName}
-              </h3>
-              
-              {/* Data Rows */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
-                <span style={{ fontWeight: '600', color: '#555' }}>Acres Burned:</span>
-                <span>{this.state.fireAcres ? this.state.fireAcres.toLocaleString() : "Unknown"}</span>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
-                <span style={{ fontWeight: '600', color: '#555' }}>Containment:</span>
-                <span style={{ fontWeight: 'bold' }}>
-                  {this.state.fireContain !== null && this.state.fireContain !== undefined 
-                    ? `${this.state.fireContain.toLocaleString()}%` 
-                    : "Unknown"}
-                </span>
-              </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
-                <span style={{ fontWeight: '600', color: '#555' }}>Days Burning:</span>
-                <span>{this.state.fireDuration ? this.state.fireDuration : "Unknown"}</span>
-              </div>
-
-              {/* Render the Progress Bar only if cost data exists */}
-              {this.state.rawFinalCost > 0 && (
-                <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px dotted #ccc' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '13px', color: '#555' }}>
-                    <span style={{ fontWeight: '600' }}>Budget Used:</span>
-                    <span>{this.state.costToDate} / {this.state.finalCost}</span>
-                  </div>
-                  <Progress 
-                    value={this.state.rawCostToDate} 
-                    total={this.state.rawFinalCost} 
-                    color='orange' 
-                    size='tiny' 
-                    style={{ margin: '2px 0 0 0' }}
-                  />
-                </div>
-              )}
-              
+      marker={this.state.activeMarker}
+      visible={this.state.showInfo}
+      onClose={() => this.setState({ showInfo: false })}
+    >
+      {/* 1. Provide a guaranteed static root element */}
+      <div style={{ minWidth: '220px', maxWidth: '280px', padding: '4px', fontFamily: 'system-ui, sans-serif' }}>
+        
+        {/* 2. Move the conditional check inside the root element */}
+        {this.state.fireName ? (
+          <>
+            {/* Header */}
+            <h3 style={{ margin: '0 0 8px 0', paddingBottom: '6px', borderBottom: '1px solid #ddd', fontSize: '16px', lineHeight: '1.3' }}>
+              {this.state.fireName}
+            </h3>
+            
+            {/* Data Rows */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+              <span style={{ fontWeight: '600', color: '#555' }}>Acres Burned:</span>
+              <span>{this.state.fireAcres ? this.state.fireAcres.toLocaleString() : "Unknown"}</span>
             </div>
-          )}
-        </InfoWindow>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+              <span style={{ fontWeight: '600', color: '#555' }}>Containment:</span>
+              <span style={{ fontWeight: 'bold' }}>
+                {this.state.fireContain !== null && this.state.fireContain !== undefined 
+                  ? `${this.state.fireContain.toLocaleString()}%` 
+                  : "Unknown"}
+              </span>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+              <span style={{ fontWeight: '600', color: '#555' }}>Days Burning:</span>
+              <span>{this.state.fireDuration ? this.state.fireDuration : "Unknown"}</span>
+            </div>
+
+            {/* Render the Progress Bar only if cost data exists */}
+            {this.state.rawFinalCost > 0 && (
+              <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px dotted #ccc' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '13px', color: '#555' }}>
+                  <span style={{ fontWeight: '600' }}>Budget Used:</span>
+                  <span>{this.state.costToDate} / {this.state.finalCost}</span>
+                </div>
+                <Progress 
+                  value={this.state.rawCostToDate} 
+                  total={this.state.rawFinalCost} 
+                  color='orange' 
+                  size='tiny' 
+                  style={{ margin: '2px 0 0 0' }}
+                />
+              </div>
+            )}
+          </>
+        ) : null}
+      </div>
+    </InfoWindow>
       </Map>
     );
   }

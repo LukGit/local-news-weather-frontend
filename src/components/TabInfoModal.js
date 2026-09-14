@@ -47,14 +47,18 @@ const TAB_CONFIGS = {
     ]
   },
   flood: {
-    title: 'Global Flood Event Legend',
+    title: 'Global Flood & NWS Warning Legend',
     color: 'blue',
-    sources: [{ name: 'GDACS API', desc: 'Global disaster alerts and satellite-derived inundation mapping.' }],
+    sources: [
+      { name: 'GDACS', desc: 'Global Disaster Alert and Coordination System (worldwide active floods).' },
+      { name: 'NWS / NOAA', desc: 'National Weather Service active US flood & flash flood warnings.' }
+    ],
     rules: [
-      'Severity Classification: Icon size and color scale dynamically based on GDACS alert levels (Green, Orange, Red).',
-      'Auto-Zoom Polygons: Clicking a marker automatically zooms the map to render satellite-derived flooded area boundaries (when available).',
-      'Historical Timeframe Slider: Interactively filter visible flood events from the past 1 to 365 days.',
-      'Severity Filter: Toggle switch isolates critical events by suppressing minor (Green) alerts.'
+      'Dataset Toggle: Seamlessly switch the map layer between worldwide GDACS alerts and detailed US NWS warnings.',
+      'Icon Scaling (GDACS): Drop markers enlarge proportionally based on assigned Red, Orange, or Green alert levels.',
+      'Temporal Decay (NWS): US warning icons progressively fade in opacity based on age (up to 24 hours).',
+      'Active-Only Polygons: Selecting a marker auto-zooms the map to level 9 and renders the precise impact boundary for that specific event.',
+      'NWS Polygon Colors: Red boundaries indicate Flash Flood Warnings; blue indicates standard Flood Warnings/Advisories.'
     ]
   }
 };

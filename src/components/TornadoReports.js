@@ -35,9 +35,14 @@ class TornadoReports extends Component {
       });
   }
   componentDidMount() {
+    this._isMounted = true;
     this.fetchTornadoData();
   }
 
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
+  
   render() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>

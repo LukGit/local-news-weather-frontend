@@ -149,6 +149,9 @@ fetchAllHurricaneData = () => {
 
     // Wait for BOTH requests to finish before proceeding
     Promise.all([fetchNOAA, fetchHKO]).then(results => {
+      // FIX: Immediately halt execution if the user left the tab
+      if (!this._isMounted) return; 
+
       const noaaData = results[0];
       const hkoData = results[1];
 
@@ -197,7 +200,12 @@ fetchAllHurricaneData = () => {
 
   componentDidMount () {
     // Execute on initial load
+    this._isMounted = true;
     this.fetchAllHurricaneData();
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   handleHtsOnly = (e, { checked }) => {

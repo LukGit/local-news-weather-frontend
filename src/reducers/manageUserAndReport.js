@@ -8,6 +8,12 @@ const initialUserState = {
   gps: { lat: 22.3193, lng: 114.1694 } // Default fallback (Hong Kong)
 };
 
+// NEW: Water state holds both isolated datasets
+const initialWaterState = {
+  w_reports: [],
+  nws_reports: []
+};
+
 // 2. REDUCERS (Now initialUserState is fully initialized when these run)
 function usersReducer(state = initialUserState, action) {
   switch (action.type) {
@@ -57,11 +63,13 @@ function tornadoReportsReducer(state = [], action) {
   }
 }
 
-// NEW: Water/Flood Reports Reducer
-function waterReportsReducer(state = [], action) {
+// UPDATED: Water/Flood Reports Reducer
+function waterReportsReducer(state = initialWaterState, action) {
     switch (action.type) {
         case "ADD_WATER_REPORT":
-            return [...action.w_reports];
+            return { ...state, w_reports: action.w_reports };
+        case "ADD_NWS_REPORT":
+            return { ...state, nws_reports: action.nws_reports };
         default:
             return state;
     }
@@ -73,7 +81,7 @@ const rootReducer = combineReducers({
   c_reports: caneReportsReducer,
   f_reports: fireReportsReducer,
   t_reports: tornadoReportsReducer,
-  w_reports: waterReportsReducer // NEW
+  water: waterReportsReducer // RENAMED: 'water' accesses both dataset
 });
 
 export default rootReducer;

@@ -149,10 +149,14 @@ handleClick = (props, marker, e) => {
   // center is to set the map center when map is recentered by a user click
   // added opacity to have older quakes fade into the background
   render() {
+    // Define a guaranteed fallback coordinate
+    const safeCenter = { lat: 41.8781, lng: -87.6298 };
+
     return (
       <Map google={this.props.google} 
       zoom={3}
-      initialCenter={this.props.centerGPS}
+      // FIX: Provide the safe fallback to both center props
+      initialCenter={this.props.centerGPS || safeCenter}
       /* Dynamic re-centering: uses click recenter if active, otherwise uses updated GPS */
       center={this.state.recenterGPS || this.props.centerGPS}
       onClick={this.onMapClick}
@@ -187,84 +191,84 @@ handleClick = (props, marker, e) => {
           >
           </Marker>
         })}
-        <InfoWindow
-  marker={this.state.qMarker}
-  visible={this.state.showInfo}
-  onClose={() => this.setState({ showInfo: false })}
->
-  {this.state.quakePl && (
-    <div style={{ minWidth: '220px', maxWidth: '280px', padding: '4px', fontFamily: 'system-ui, sans-serif' }}>
-      
-      {/* Header */}
-      <h3 style={{ margin: '0 0 8px 0', paddingBottom: '6px', borderBottom: '1px solid #ddd', fontSize: '16px', lineHeight: '1.3' }}>
-        Magnitude {this.state.quakeMag} <br/>
-        <span style={{ fontSize: '13px', fontWeight: 'normal', color: '#555' }}>
-          {this.state.quakePl}
-        </span>
-      </h3>
+            <InfoWindow 
+          marker={this.state.qMarker} 
+          visible={this.state.showInfo} 
+          onClose={() => this.setState({ showInfo: false })}
+        >
+          <div style={{ minWidth: '220px', maxWidth: '280px', padding: '4px', fontFamily: 'system-ui, sans-serif' }}>
+            {this.state.quakePl ? (
+              <>
+                {/* Header */}
+                <h3 style={{ margin: '0 0 8px 0', paddingBottom: '6px', borderBottom: '1px solid #ddd', fontSize: '16px', lineHeight: '1.3' }}>
+                  Magnitude {this.state.quakeMag} <br/>
+                  <span style={{ fontSize: '13px', fontWeight: 'normal', color: '#555' }}>
+                    {this.state.quakePl}
+                  </span>
+                </h3>
 
-      {/* Tsunami Warning Banner - Only renders if flag is active */}
-      {this.state.quakeTsunamiFlag === 1 && (
-         <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '6px', borderRadius: '4px', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', textAlign: 'center', border: '1px solid #f87171' }}>
-            ⚠️ Tsunami Advisory/Watch Active
-         </div>
-      )}
-      
-      {/* Data Rows */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
-        <span style={{ fontWeight: '600', color: '#555' }}>Depth:</span>
-        <span style={{ color: this.getDepthColor(this.state.quakeDepth), fontWeight: 'bold' }}>
-          {this.state.quakeDepth} km
-        </span>
-      </div>
-      
-      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
-        <span style={{ fontWeight: '600', color: '#555' }}>Alert Level:</span>
-        <span style={{ color: this.getAlertColor(this.state.quakeAlert), fontWeight: 'bold', textTransform: 'capitalize' }}>
-          {this.state.quakeAlert === null ? "None" : this.state.quakeAlert}
-        </span>
-      </div>
+                {/* Tsunami Warning Banner - Only renders if flag is active */}
+                {this.state.quakeTsunamiFlag === 1 && (
+                  <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '6px', borderRadius: '4px', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', textAlign: 'center', border: '1px solid #f87171' }}>
+                      ⚠️ Tsunami Advisory/Watch Active
+                  </div>
+                )}
+                
+                {/* Data Rows */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+                  <span style={{ fontWeight: '600', color: '#555' }}>Depth:</span>
+                  <span style={{ color: this.getDepthColor(this.state.quakeDepth), fontWeight: 'bold' }}>
+                    {this.state.quakeDepth} km
+                  </span>
+                </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+                  <span style={{ fontWeight: '600', color: '#555' }}>Alert Level:</span>
+                  <span style={{ color: this.getAlertColor(this.state.quakeAlert), fontWeight: 'bold', textTransform: 'capitalize' }}>
+                    {this.state.quakeAlert === null ? "None" : this.state.quakeAlert}
+                  </span>
+                </div>
 
-      {/* Distance Triage - Always renders, shows fallback if GPS missing */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
-        <span style={{ fontWeight: '600', color: '#555' }}>Proximity:</span>
-        <span style={{ 
-          fontWeight: this.state.quakeDistance && this.state.quakeDistance < 100 ? 'bold' : 'normal',
-          color: this.state.quakeDistance && this.state.quakeDistance < 100 ? '#dc2626' : 'inherit' 
-        }}>
-          {this.state.quakeDistance !== null ? `${this.state.quakeDistance} mi` : 'GPS Unavailable'}
-        </span>
-      </div>
+                {/* Distance Triage */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+                  <span style={{ fontWeight: '600', color: '#555' }}>Proximity:</span>
+                  <span style={{ 
+                    fontWeight: this.state.quakeDistance && this.state.quakeDistance < 100 ? 'bold' : 'normal',
+                    color: this.state.quakeDistance && this.state.quakeDistance < 100 ? '#dc2626' : 'inherit' 
+                  }}>
+                    {this.state.quakeDistance !== null ? `${this.state.quakeDistance} mi` : 'GPS Unavailable'}
+                  </span>
+                </div>
 
-      {/* Felt Reports - Always renders, defaults to 0 if USGS says null */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
-        <span style={{ fontWeight: '600', color: '#555' }}>Felt Reports:</span>
-        <span>{this.state.quakeFeltCount ? this.state.quakeFeltCount.toLocaleString() : '0'}</span>
-      </div>
-      
-      {/* Date */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '13px', color: '#777', marginTop: '8px' }}>
-        <span style={{ fontWeight: '600' }}>Time:</span>
-        {/* Your handleClick already formats this with toLocaleString() */}
-        <span>{this.state.quakeDate}</span> 
-      </div>
-      
-      {/* Link */}
-      {this.state.quakeLink && (
-        <div style={{ marginTop: '10px', textAlign: 'center' }}>
-          <a 
-            href={this.state.quakeLink} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            style={{ fontSize: '13px', color: '#0066cc', textDecoration: 'none' }}
-          >
-            View USGS Event Detail
-          </a>
-        </div>
-      )}
-    </div>
-  )}
-</InfoWindow>
+                {/* Felt Reports */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '14px' }}>
+                  <span style={{ fontWeight: '600', color: '#555' }}>Felt Reports:</span>
+                  <span>{this.state.quakeFeltCount ? this.state.quakeFeltCount.toLocaleString() : '0'}</span>
+                </div>
+                
+                {/* Date */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '13px', color: '#777', marginTop: '8px' }}>
+                  <span style={{ fontWeight: '600' }}>Time:</span>
+                  <span>{this.state.quakeDate}</span> 
+                </div>
+                
+                {/* Link */}
+                {this.state.quakeLink && (
+                  <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                    <a 
+                      href={this.state.quakeLink} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '13px', color: '#0066cc', textDecoration: 'none' }}
+                    >
+                      View USGS Event Detail
+                    </a>
+                  </div>
+                )}
+              </>
+            ) : null}
+          </div>
+        </InfoWindow>
       </Map>
     );
   }

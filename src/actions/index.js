@@ -29,3 +29,6 @@ export const addTornadoReport = t_reports => {
 export const addWaterReport = w_reports => {
     return { type: 'ADD_WATER_REPORT', w_reports };
 };
+export const addNWSReport = nws_reports => {
+  return { type: 'ADD_NWS_REPORT', nws_reports };
+};
