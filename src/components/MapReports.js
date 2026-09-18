@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
-import { Map, Marker, GoogleApiWrapper, InfoWindow } from 'google-maps-react';
+import { Map, Marker, GoogleApiWrapper, InfoWindow, Polyline } from 'google-maps-react';
 import quakeS from '../img/quake24.png'
 import quakeM from '../img/quake36.png'
 import quakeL from '../img/quake48.png'
 import quakeX from '../img/quake64.png'
 import { withRouter } from 'react-router-dom'
+import plateData from '../data/tectonic-plates.json';
 //import { Item } from 'semantic-ui-react/dist/commonjs'
 
 
@@ -70,6 +71,7 @@ handleClick = (props, marker, e) => {
           epicenterLng
         );
       }
+      const faultData = this.findNearestFault(epicenterLat, epicenterLng);
       this.setState({
         qMarker: marker,
         showInfo: true,
@@ -80,6 +82,8 @@ handleClick = (props, marker, e) => {
         quakeLink: quake.properties.url,
         quakeDepth: quake.geometry.coordinates[2],
         quakeDistance: distanceFromHome,
+        nearestFaultDistance: faultData.distance, 
+        nearestFaultPath: faultData.path, // Save the path for rendering
         quakeFeltCount: quakeResp.properties.felt,
         quakeTsunamiFlag: quakeResp.properties.tsunami,
         recenterGPS: { lat: epicenterLat, lng: epicenterLng }
@@ -91,7 +95,7 @@ handleClick = (props, marker, e) => {
   onMapClick = (props) => {
     if (this.state.showInfo) {
       this.setState({
-        showInfo: false
+        showInfo: false, nearestFaultPath: null
       })
     }
   }
@@ -142,6 +146,44 @@ handleClick = (props, marker, e) => {
     
     return Math.round(distance); // Returns clean integer miles
   }
+  findNearestFault = (quakeLat, quakeLng) => {
+  let minDistance = Infinity;
+  let closestPath = null; // We will store the actual line geometry here
+
+  if (!plateData || !plateData.features) return { distance: null, path: null };
+
+  plateData.features.forEach(feature => {
+    const type = feature.geometry.type;
+    const coords = feature.geometry.coordinates;
+
+    const checkLineSegment = (lineCoords) => {
+      let localMin = Infinity;
+      // Find the closest vertex in this specific line
+      lineCoords.forEach(pt => {
+        const dist = this.calculateDistance(quakeLat, quakeLng, pt[1], pt[0]);
+        if (dist < localMin) localMin = dist;
+      });
+
+      // If this line is the closest one we've seen so far, save its distance and its full path
+      if (localMin < minDistance) {
+        minDistance = localMin;
+        closestPath = lineCoords.map(pt => ({ lat: pt[1], lng: pt[0] }));
+      }
+    };
+
+    if (type === 'LineString') {
+      checkLineSegment(coords);
+    } else if (type === 'MultiLineString') {
+      coords.forEach(line => checkLineSegment(line));
+    }
+  });
+
+  return { 
+    distance: minDistance === Infinity ? null : minDistance, 
+    path: closestPath 
+  };
+};
+
   // this shows a map with earthquake reports as markers on map
   // each report item from store is mapped to a marker on map based on gps data received from USGS
   // details of the quake is displayed via a infowindow when the marker is clicked
@@ -191,10 +233,21 @@ handleClick = (props, marker, e) => {
           >
           </Marker>
         })}
-            <InfoWindow 
+        {/* Highlight the single nearest fault line on marker click */}
+        {this.state.showInfo && this.state.nearestFaultPath && (
+          <Polyline
+            path={this.state.nearestFaultPath}
+            strokeColor="#dc2626" // Sharp red to highlight the specific active boundary
+            strokeOpacity={1.0}
+            strokeWeight={4}      // Thicker than the background lines
+            geodesic={true}
+            zIndex={100}          // Bring to the front
+          />
+        )}
+        <InfoWindow 
           marker={this.state.qMarker} 
           visible={this.state.showInfo} 
-          onClose={() => this.setState({ showInfo: false })}
+          onClose={() => this.setState({ showInfo: false, nearestFaultPath: null })}
         >
           <div style={{ minWidth: '220px', maxWidth: '280px', padding: '4px', fontFamily: 'system-ui, sans-serif' }}>
             {this.state.quakePl ? (
@@ -267,6 +320,21 @@ handleClick = (props, marker, e) => {
                 )}
               </>
             ) : null}
+            {/* Fault Proximity Row */}
+          {/* Disclaimer UI inside InfoWindow */}
+          {this.state.nearestFaultDistance !== null && (
+            <div style={{ margin: '8px 0', padding: '6px', backgroundColor: '#fff7ed', borderRadius: '4px', border: '1px solid #fed7aa' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                <span style={{ fontWeight: '600', color: '#c2410c' }}>Nearest Tectonic Boundary:</span>
+                <span style={{ fontWeight: 'bold', color: '#c2410c' }}>
+                  {this.state.nearestFaultDistance} mi
+                </span>
+              </div>
+              <div style={{ fontSize: '11px', color: '#9a3412', marginTop: '4px', lineHeight: '1.2' }}>
+                * Boundary proximity is provided for spatial reference and does not definitively establish geologic causation.
+              </div>
+            </div>
+          )}
           </div>
         </InfoWindow>
       </Map>

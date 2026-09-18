@@ -10,7 +10,8 @@ const TAB_CONFIGS = {
       'Magnitude Visual Scaling: Icons enlarge and alter geometry for higher Richter magnitudes (Mw).',
       'Temporal Decay: Marker opacity gradually decreases over the 72-hour window as quakes age.',
       'Chronological Playback: Sequential timeline playback highlights quakes with animated marker bounces.',
-      'Magnitude Threshold Filter: Interactive slider filters map rendering by minimum magnitude.'
+      'Magnitude Threshold Filter: Interactive slider filters map rendering by minimum magnitude.',
+      'Tectonic Fault Proximity: Clicking an earthquake marker highlights the nearest global plate boundary (Hugo Ahlenius / USGS PB2002 dataset) and calculates its spatial distance.'
     ]
   },
   hurricane: {
