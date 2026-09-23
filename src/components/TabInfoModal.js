@@ -52,14 +52,17 @@ const TAB_CONFIGS = {
     color: 'blue',
     sources: [
       { name: 'GDACS', desc: 'Global Disaster Alert and Coordination System (worldwide active floods).' },
-      { name: 'NWS / NOAA', desc: 'National Weather Service active US flood & flash flood warnings.' }
+      { name: 'NWS / NOAA', desc: 'National Weather Service active US flood & flash flood warnings.' },
+      { name: 'USGS', desc: 'United States Geological Survey real-time streamflow and gage height data.' }
     ],
     rules: [
       'Dataset Toggle: Seamlessly switch the map layer between worldwide GDACS alerts and detailed US NWS warnings.',
       'Icon Scaling (GDACS): Drop markers enlarge proportionally based on assigned Red, Orange, or Green alert levels.',
       'Temporal Decay (NWS): US warning icons progressively fade in opacity based on age (up to 24 hours).',
       'Active-Only Polygons: Selecting a marker auto-zooms the map to level 9 and renders the precise impact boundary for that specific event.',
-      'NWS Polygon Colors: Red boundaries indicate Flash Flood Warnings; blue indicates standard Flood Warnings/Advisories.'
+      'NWS Polygon Colors: Red boundaries indicate Flash Flood Warnings; blue indicates standard Flood Warnings/Advisories.',
+      'USGS Stream Gauges: Selecting a standard US Flood Warning renders interactive waterdrop markers representing real-time local gauge data.',
+      'Data Disclaimer: Main-stem gauges on massive waterways (e.g., the Mississippi and Ohio Rivers) are physically managed by the US Army Corps of Engineers and do not broadcast via this USGS instantaneous network.'
     ]
   }
 };

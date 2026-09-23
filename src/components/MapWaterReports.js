@@ -8,6 +8,7 @@ import flooding48 from '../img/flooding48.png';
 import flooding24 from '../img/flooding24.png';
 import warningS from '../img/warning16.png';
 import warning16B from '../img/warning16B.png'; // NEW IMPORT
+import waterdrop16 from '../img/waterdrop16.png';
 
 
 export class MapWaterReports extends Component {
@@ -19,7 +20,10 @@ export class MapWaterReports extends Component {
     selectedFlood: {},
     selectedNWS: null,
     currentZoom: 3,
-    polygons: {} 
+    polygons: {},
+    gaugeMarkers: [],
+    selectedGauge: null,
+    activeGaugeMarker: null 
   };
 
   componentDidMount() {
@@ -115,21 +119,112 @@ export class MapWaterReports extends Component {
   };
 
   handleNWSClick = (props, marker, report, center) => {
-    this.setState(prevState => ({
+    const eventType = report.title || "";
+    const isRiverineFlood = eventType.toLowerCase().includes("flood warning") && 
+                            !eventType.toLowerCase().includes("flash");
+
+    // Baseline state: standard NWS InfoWindow and Polygon zoom
+    const defaultState = {
       activeMarker: marker,
       showInfo: true,
       selectedNWS: report,
       selectedFlood: {},
       recenterGPS: center,
-      currentZoom: prevState.currentZoom < 9 ? 9 : prevState.currentZoom
-    }));
+      currentZoom: this.state.currentZoom < 9 ? 9 : this.state.currentZoom,
+      gaugeMarkers: [], // Clear any previous gauges
+      selectedGauge: null,
+      activeGaugeMarker: null
+    };
+
+    if (!isRiverineFlood) {
+      this.setState(defaultState);
+      return;
+    }
+
+    // Retrieve the raw geometry from props to calculate the BBox
+    const rawFeature = this.props.nws_reports.find(r => r.id === report.id);
+    if (!rawFeature || !rawFeature.geometry) {
+      this.setState(defaultState);
+      return;
+    }
+
+    const bbox = this.getPolygonBBox(rawFeature.geometry);
+    if (!bbox) {
+      this.setState(defaultState);
+      return;
+    }
+
+    const usgsUrl = `https://waterservices.usgs.gov/nwis/iv/?format=json&bBox=${bbox}&parameterCd=00065,00060&siteStatus=active`;
+
+    console.log("================ GAUGE DEBUG ================");
+    console.log("1. Clicked Event:", report.title);
+    console.log("2. Generated BBox:", bbox);
+    console.log("3. Request URL:", usgsUrl);
+
+    fetch(usgsUrl)
+      .then(res => res.json())
+      .then(usgsData => {
+        const timeSeries = usgsData?.value?.timeSeries || [];
+
+        if (timeSeries.length === 0) {
+          this.setState(defaultState);
+          return;
+        }
+        
+        const gaugeDict = {};
+
+        timeSeries.forEach(ts => {
+          const sourceInfo = ts.sourceInfo;
+          const valObj = ts.values[0]?.value[0];
+          const lat = sourceInfo.geoLocation.geogLocation.latitude;
+          const lng = sourceInfo.geoLocation.geogLocation.longitude;
+          const siteId = sourceInfo.siteCode[0].value;
+
+          // Use the buffered crosshair check to capture valid edge gauges
+          if (this.isGaugeNearPolygon(lat, lng, rawFeature.geometry)) {
+            if (!gaugeDict[siteId]) {
+              gaugeDict[siteId] = {
+                id: siteId,
+                name: sourceInfo.siteName,
+                lat: lat,
+                lng: lng,
+                value: `${valObj?.value || 'N/A'} ${ts.variable.unit.unitCode}`,
+                variable: ts.variable.variableName.split(',')[0],
+                time: valObj?.dateTime ? new Date(valObj.dateTime).toLocaleString() : ''
+              };
+            } else {
+              // Append the second metric and its unit
+              gaugeDict[siteId].value += ` | ${valObj?.value || 'N/A'} ${ts.variable.unit.unitCode}`;
+              // Append the second variable name to the label
+              gaugeDict[siteId].variable += ` / ${ts.variable.variableName.split(',')[0]}`;
+            }
+          }
+        });
+
+        const parsedGauges = Object.values(gaugeDict);
+
+        if (parsedGauges.length === 0) {
+          this.setState(defaultState);
+          return;
+        }
+
+        this.setState({
+          ...defaultState,
+          gaugeMarkers: parsedGauges,
+          currentZoom: 10 // Push zoom slightly closer to view the gauge array
+        });
+      })
+      .catch(err => {
+        console.error("USGS fetch error:", err);
+        this.setState(defaultState);
+      });
   };
 
   onMapClick = () => {
-    if (this.state.showInfo) {
-      this.setState({ showInfo: false });
+    if (this.state.showInfo || this.state.selectedGauge) {
+      this.setState({ showInfo: false, selectedGauge: null, activeGaugeMarker: null });
     }
-  };
+  }
 
   getAlertColor = (alertLevel) => {
     switch (alertLevel) {
@@ -179,6 +274,72 @@ export class MapWaterReports extends Component {
     
     const opacity = 1.0 - (hoursPassed / 24);
     return Math.max(minOpacity, opacity);
+  };
+getPolygonBBox = (geometry) => {
+    if (!geometry || !geometry.coordinates) return null;
+    
+    // Flatten arrays depending on GeoJSON shape type
+    const rawCoords = geometry.type === 'MultiPolygon' 
+      ? geometry.coordinates.flat(2) 
+      : geometry.coordinates.flat(1);
+
+    let minLat = Infinity, maxLat = -Infinity;
+    let minLng = Infinity, maxLng = -Infinity;
+
+    rawCoords.forEach(([lng, lat]) => {
+      if (lat < minLat) minLat = lat;
+      if (lat > maxLat) maxLat = lat;
+      if (lng < minLng) minLng = lng;
+      if (lng > maxLng) maxLng = lng;
+    });
+
+    // Format strictly for the USGS bBox parameter
+    return `${minLng.toFixed(4)},${minLat.toFixed(4)},${maxLng.toFixed(4)},${maxLat.toFixed(4)}`;
+  };
+
+  isGaugeInsidePolygon = (gaugeLat, gaugeLng, polygonCoords) => {
+    let inside = false;
+    // Standard ray-casting point-in-polygon algorithm
+    for (let i = 0, j = polygonCoords.length - 1; i < polygonCoords.length; j = i++) {
+      const xi = polygonCoords[i][0], yi = polygonCoords[i][1];
+      const xj = polygonCoords[j][0], yj = polygonCoords[j][1];
+
+      const intersect = ((yi > gaugeLat) !== (yj > gaugeLat)) &&
+          (gaugeLng < (xj - xi) * (gaugeLat - yi) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  };
+  isPointInGeoJSON = (lat, lng, geometry) => {
+    if (!geometry || !geometry.coordinates) return false;
+    
+    if (geometry.type === 'Polygon') {
+      return this.isGaugeInsidePolygon(lat, lng, geometry.coordinates[0]);
+    }
+    
+    if (geometry.type === 'MultiPolygon') {
+      for (let i = 0; i < geometry.coordinates.length; i++) {
+        if (this.isGaugeInsidePolygon(lat, lng, geometry.coordinates[i][0])) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  isGaugeNearPolygon = (lat, lng, geometry) => {
+    // 1. Check the exact mathematical point first
+    if (this.isPointInGeoJSON(lat, lng, geometry)) return true;
+
+    // 2. Add a ~0.6 mile tolerance (Crosshair check) to catch shore/bridge gauges
+    const offset = 0.01; 
+    
+    if (this.isPointInGeoJSON(lat + offset, lng, geometry)) return true; // North
+    if (this.isPointInGeoJSON(lat - offset, lng, geometry)) return true; // South
+    if (this.isPointInGeoJSON(lat, lng + offset, geometry)) return true; // East
+    if (this.isPointInGeoJSON(lat, lng - offset, geometry)) return true; // West
+
+    return false;
   };
 
     render() {
@@ -330,6 +491,43 @@ export class MapWaterReports extends Component {
             />
           );
         })}
+        {/* 3. USGS Gauge Markers (Rendered strictly inside active Riverine Flood Warnings) */}
+        {activeSource === 'NWS' && this.state.gaugeMarkers.map(gauge => (
+          <Marker
+            key={`gauge-${gauge.id}`}
+            position={{ lat: gauge.lat, lng: gauge.lng }}
+            title={gauge.name}
+            icon={{ url: waterdrop16 }}
+            onClick={(props, marker, e) => this.setState({ 
+              selectedGauge: gauge, 
+              activeGaugeMarker: marker, // Anchor to the specific marker element
+              showInfo: false 
+            })}
+          />
+        ))}
+
+        {/* ==================== USGS GAUGE INFO WINDOW ==================== */}
+        {/* Render unconditionally, control via visibility and child rendering */}
+        <InfoWindow
+          marker={this.state.activeGaugeMarker}
+          visible={!!this.state.selectedGauge}
+          onClose={() => this.setState({ selectedGauge: null, activeGaugeMarker: null })}
+        >
+          {this.state.selectedGauge ? (
+            <div style={{ minWidth: '200px', padding: '4px', fontFamily: 'system-ui, sans-serif' }}>
+              <h4 style={{ margin: '0 0 6px 0', fontSize: '14px', color: '#1e3a8a', borderBottom: '1px solid #ddd', paddingBottom: '4px' }}>
+                {this.state.selectedGauge.name}
+              </h4>
+              <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0', fontSize: '13px' }}>
+                <span style={{ fontWeight: '600', color: '#555' }}>{this.state.selectedGauge.variable}:</span>
+                <span style={{ fontWeight: 'bold' }}>{this.state.selectedGauge.value}</span>
+              </div>
+              <div style={{ fontSize: '11px', color: '#777', marginTop: '6px', textAlign: 'right' }}>
+                Updated: {this.state.selectedGauge.time}
+              </div>
+            </div>
+          ) : <div />}
+        </InfoWindow>
 
         {/* ==================== INFO WINDOW ==================== */}
         <InfoWindow
