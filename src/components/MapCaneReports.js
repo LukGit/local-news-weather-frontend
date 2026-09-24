@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
-import { Map, Marker, GoogleApiWrapper, InfoWindow, Polyline, Polygon } from 'google-maps-react';
+import { Map, Marker, GoogleApiWrapper, InfoWindow, Polyline, Polygon, Circle } from 'google-maps-react';
 import caneS from '../img/hts24.png'
 import caneM from '../img/hts32.png'
 import caneL from '../img/hts48.png'
 import { withRouter } from 'react-router-dom'
+import { getEstimatedWindRadii } from '../utils/cycloneRadii';
 //import { Item } from 'semantic-ui-react/dist/commonjs'
 
 
@@ -22,7 +23,8 @@ export class MapCaneReports extends Component {
     caneSpeedDir: "",
     caneAdviceLink: "",
     caneUpdated: "",
-    caneForecastLink: ""
+    caneForecastLink: "",
+    selectedStorm: null
   }
   
   componentDidMount () {
@@ -92,7 +94,31 @@ export class MapCaneReports extends Component {
   } else {
     hDir = "N"
   }
-    
+  
+  // NEW: Trigger Map Auto-Zoom to level 7
+  // The map instance is attached to the marker in google-maps-react
+  const mapInstance = marker.map || (marker.getMap && marker.getMap());
+  if (mapInstance) {
+    mapInstance.setZoom(7);
+  }
+
+  // NEW: Native KML Layer Management (Bypass React Wrapper)
+  // 1. Clear any existing KML layer from the map
+  if (this.activeKmlLayer) {
+    this.activeKmlLayer.setMap(null);
+    this.activeKmlLayer = null;
+  }
+  // 2. If it's a NOAA storm with a KMZ, draw it using native Google Maps API
+  const isNOAA = cane.initialWindExtent && cane.initialWindExtent.kmzFile;
+  if (isNOAA && mapInstance && window.google) {
+    this.activeKmlLayer = new window.google.maps.KmlLayer({
+      url: cane.initialWindExtent.kmzFile,
+      map: mapInstance,
+      preserveViewport: true, // Prevents Google from overriding our zoom level 7
+      suppressInfoWindows: true,
+      clickable: false
+    });
+  }
   this.setState({
     caneName: cane.name,
     caneClass: hClass,
@@ -104,7 +130,8 @@ export class MapCaneReports extends Component {
     caneUpdated: cane.lastUpdate,
     hMarker: marker,
     showInfo: true,
-    recenterGPS: {lat: cane.latitudeNumeric, lng: cane.longitudeNumeric}
+    recenterGPS: {lat: cane.latitudeNumeric, lng: cane.longitudeNumeric},
+    selectedStorm: cane // NEW: Store full storm object to trigger polygon rendering
   })
   }
   onMapClick = (props) => {
@@ -141,7 +168,11 @@ render() {
         zoom={4} 
         initialCenter={{lat: 24.64053936080381, lng: -93.95208035058195}} 
         center={this.state.recenterGPS} 
-        onClick={this.onMapClick} 
+        onClick={(mapProps, map, clickEvent) => {
+        // Keeps the storm polygons on screen, but closes the info bubble
+        this.setState({ showInfo: false });
+        if (this.onMapClick) this.onMapClick(mapProps, map, clickEvent);
+      }} 
       >
         {/* Forecast Cone Boundary Shading */}
         {this.props.c_reports.map(r => {
@@ -226,6 +257,34 @@ render() {
           );
         })}
 
+      {/* DYNAMIC COVERAGE LAYER (Wind Radii) */}
+      {this.state.selectedStorm && (() => {
+        const storm = this.state.selectedStorm;
+        const isNOAA = storm.initialWindExtent && storm.initialWindExtent.kmzFile;
+        
+        // If it is a NOAA storm, the native KmlLayer handles the rendering in handleClick.
+        // We only render React Circles for HKO storms (or NOAA storms missing KMZ data).
+        if (isNOAA) return null;
+
+        const lat = storm.latitudeNumeric || parseFloat(storm.latitude);
+        const lng = storm.longitudeNumeric || parseFloat(storm.longitude);
+        const rings = getEstimatedWindRadii(storm.intensity);
+
+        return rings.map((ring) => (
+          <Circle
+            key={`ring-${storm.id}-${ring.speedKt}`}
+            center={{ lat, lng }}
+            radius={ring.radiusMeters}
+            fillColor={ring.fillColor}
+            fillOpacity={ring.fillOpacity}
+            strokeColor={ring.strokeColor}
+            strokeOpacity={0.8}
+            strokeWeight={1.5}
+            clickable={false}
+          />
+        ));
+      })()}
+
 
         {/* Inside your InfoWindow block */}
         <InfoWindow
@@ -233,7 +292,7 @@ render() {
       visible={this.state.showInfo}
       onClose={() => this.setState({ showInfo: false })}
     >
-      <div style={{ minWidth: '220px', padding: '4px', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ width: '240px', padding: '4px', fontFamily: 'system-ui, sans-serif' }}>
         {this.state.caneName ? (
           <>
             {/* Header */}
@@ -262,15 +321,34 @@ render() {
               <span style={{ fontWeight: '600' }}>Updated:</span>
               <span>{formatShortDate(this.state.caneUpdated)}</span>
             </div>
-            
+          {/* NEW: Wind Radii Disclaimer Panel */}
+            <div style={{ 
+                marginTop: '12px', 
+                padding: '8px', 
+                backgroundColor: '#f8fafc', 
+                borderRadius: '4px', 
+                border: '1px solid #e2e8f0',
+                fontSize: '11px', 
+                lineHeight: '1.4',
+                color: '#475569',
+                width: '100%',
+                boxSizing: 'border-box'
+              }}>
+              <div style={{ fontWeight: '600', marginBottom: '4px', color: '#334155' }}>Wind Field Coverage</div>
+              {this.state.selectedStorm.initialWindExtent && this.state.selectedStorm.initialWindExtent.kmzFile ? (
+                <span>Displays exact 34, 50, and 64-knot asymmetric wind boundaries provided by real-time NOAA telemetry.</span>
+              ) : (
+                <span>Displays estimated 34, 50, and 64-knot boundaries calculated from standard meteorological models. These are structural approximations based on storm intensity, not exact measured data.</span>
+              )}
+            </div>
             {/* Advisory Link */}
             {this.state.caneAdviceLink && (
-              <div style={{ marginTop: '10px', textAlign: 'center' }}>
+              <div style={{ marginTop: '12px', textAlign: 'center' }}>
                 <a 
                   href={this.state.caneAdviceLink} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  style={{ fontSize: '13px', color: '#0066cc', textDecoration: 'none' }}
+                  style={{ fontSize: '13px', color: '#0066cc', textDecoration: 'none', fontWeight: '500' }}
                 >
                   View Official Advisory
                 </a>
