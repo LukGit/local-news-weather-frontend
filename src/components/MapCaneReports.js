@@ -6,6 +6,7 @@ import caneL from '../img/hts48.png'
 import { withRouter } from 'react-router-dom'
 import { getEstimatedWindRadii } from '../utils/cycloneRadii';
 //import { Item } from 'semantic-ui-react/dist/commonjs'
+import { fetchWindGridData, getWindBarbURI } from '../utils/windVectors'; 
 
 
 export class MapCaneReports extends Component {
@@ -24,7 +25,9 @@ export class MapCaneReports extends Component {
     caneAdviceLink: "",
     caneUpdated: "",
     caneForecastLink: "",
-    selectedStorm: null
+    selectedStorm: null,
+    currentZoom: 4,     // NEW: Track zoom level
+    windVectors: []     // NEW: Track wind objects
   }
   
   componentDidMount () {
@@ -34,6 +37,34 @@ export class MapCaneReports extends Component {
     })
   }
   
+  // NEW: Capture zoom changes dynamically
+  handleZoomChanged = (mapProps, map) => {
+    if (map && map.getZoom() !== this.state.currentZoom) {
+      this.setState({ currentZoom: map.getZoom() });
+    }
+  }
+
+  // NEW: Fetch wind data on map idle
+  handleMapIdle = async (mapProps, map) => {
+    // The auto-zoom sets the map to 7, so we gate the vectors to appear at zoom 6+
+    if (map.getZoom() < 6) {
+      if (this.state.windVectors.length > 0) {
+        this.setState({ windVectors: [] });
+      }
+      return;
+    }
+
+    const bounds = map.getBounds();
+    if (!bounds) return;
+
+    // Use a denser 5x5 grid (25 vectors) for hurricanes instead of the 3x3 wildfire grid
+    const windData = await fetchWindGridData(bounds, 5); 
+    
+    if (windData && windData.length > 0) {
+        this.setState({ windVectors: windData });
+    }
+  }
+
   handleClick = (props, marker, e) => {
     // this set the detail information of the quake and turn on the infowindow
     const cane = this.props.c_reports.find(r => r.id === props.name)
@@ -165,14 +196,16 @@ render() {
     return (
       <Map 
         google={this.props.google} 
-        zoom={4} 
+        zoom={this.state.currentZoom} // UPDATED 
         initialCenter={{lat: 24.64053936080381, lng: -93.95208035058195}} 
         center={this.state.recenterGPS} 
         onClick={(mapProps, map, clickEvent) => {
         // Keeps the storm polygons on screen, but closes the info bubble
         this.setState({ showInfo: false });
         if (this.onMapClick) this.onMapClick(mapProps, map, clickEvent);
-      }} 
+      }}
+      onZoomChanged={this.handleZoomChanged} // NEW
+      onIdle={this.handleMapIdle}            // NEW 
       >
         {/* Forecast Cone Boundary Shading */}
         {this.props.c_reports.map(r => {
@@ -285,6 +318,18 @@ render() {
         ));
       })()}
 
+        {/* NEW: Wind Vectors Layer */}
+        {this.state.windVectors.map((vector, index) => (
+          <Marker 
+              key={`wind-${index}`}
+              position={{ lat: vector.lat, lng: vector.lng }}
+              icon={{
+                  url: getWindBarbURI(vector.speed, vector.direction),
+                  anchor: this.props.google ? new this.props.google.maps.Point(30, 30) : null 
+              }}
+              clickable={false}
+          />
+        ))}
 
         {/* Inside your InfoWindow block */}
         <InfoWindow

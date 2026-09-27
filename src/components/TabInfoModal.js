@@ -23,6 +23,7 @@ const TAB_CONFIGS = {
       'Track Vectors: Solid black paths indicate historical movement; red paths indicate official forecast trajectories.',
       'Uncertainty Cone: Shaded polygons map 3-to-5 day 67% probability margins for center-track error.',
       'Wind Field Coverage: Clicking a storm marker reveals 34, 50, and 64-knot wind boundaries using true NOAA telemetry or empirical models.',
+      'Wind Vectors and Strengths: Zooming on a NOAA storm reveals local wind directions and speeds.',
       'System Type Filter: Toggle box isolates major systems by suppressing Tropical Depressions.'
     ]
   },
