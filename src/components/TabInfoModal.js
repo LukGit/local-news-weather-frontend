@@ -17,13 +17,14 @@ const TAB_CONFIGS = {
   hurricane: {
     title: 'Cyclone & Track Analysis Legend',
     color: 'orange',
-    sources: [{ name: 'NOAA NHC & Hong Kong Observatory', desc: 'Atlantic, Eastern, and Western Pacific tropical advisories.' }],
+    sources: [{ name: 'NOAA NHC, HKO & IBTrACS', desc: 'Active Pacific/Atlantic advisories and historical global best-track climate data.' }],
     rules: [
       'Classification Icons: Visual distinctions for Tropical Depressions, Tropical Storms, and Hurricanes.',
       'Track Vectors: Solid black paths indicate historical movement; red paths indicate official forecast trajectories.',
       'Uncertainty Cone: Shaded polygons map 3-to-5 day 67% probability margins for center-track error.',
       'Wind Field Coverage: Clicking a storm marker reveals 34, 50, and 64-knot wind boundaries using true NOAA telemetry or empirical models.',
       'Wind Vectors and Strengths: Zooming on a storm reveals local wind directions and speeds.',
+      'Historical Playback: Click a past storm\'s genesis marker to isolate and animate its chronological path, color-coded by intensity phases.',
       'System Type Filter: Toggle box isolates major systems by suppressing Tropical Depressions.'
     ]
   },

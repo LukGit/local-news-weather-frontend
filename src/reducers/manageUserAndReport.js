@@ -74,6 +74,17 @@ function waterReportsReducer(state = initialWaterState, action) {
             return state;
     }
 }
+
+// History Report Reducer
+function historyReportsReducer(state = [], action) {
+  switch (action.type) {
+    case 'ADD_HISTORY_REPORT':
+      return action.reports;
+    default:
+      return state;
+  }
+}
+
 // 3. COMBINE & EXPORT AT THE BOTTOM
 const rootReducer = combineReducers({
   users: usersReducer,
@@ -81,7 +92,8 @@ const rootReducer = combineReducers({
   c_reports: caneReportsReducer,
   f_reports: fireReportsReducer,
   t_reports: tornadoReportsReducer,
-  water: waterReportsReducer // RENAMED: 'water' accesses both dataset
+  water: waterReportsReducer, // RENAMED: 'water' accesses both dataset
+  hist_reports: historyReportsReducer //history reducer
 });
 
 export default rootReducer;

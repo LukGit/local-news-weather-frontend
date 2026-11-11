@@ -183,7 +183,17 @@ handleClick = (props, marker, e) => {
     path: closestPath 
   };
 };
-
+getSafeCenter = () => {
+    const target = this.state.recenterGPS || this.props.gps;
+    if (target && target.lat !== undefined && target.lng !== undefined) {
+      const safeLat = parseFloat(target.lat);
+      const safeLng = parseFloat(target.lng);
+      if (!isNaN(safeLat) && !isNaN(safeLng)) {
+        return { lat: safeLat, lng: safeLng };
+      }
+    }
+    return { lat: 24.6405, lng: -93.9520 };
+  }
   // this shows a map with earthquake reports as markers on map
   // each report item from store is mapped to a marker on map based on gps data received from USGS
   // details of the quake is displayed via a infowindow when the marker is clicked
@@ -192,15 +202,14 @@ handleClick = (props, marker, e) => {
   // added opacity to have older quakes fade into the background
   render() {
     // Define a guaranteed fallback coordinate
-    const safeCenter = { lat: 41.8781, lng: -87.6298 };
+    //const safeCenter = { lat: 41.8781, lng: -87.6298 };
 
     return (
       <Map google={this.props.google} 
       zoom={3}
       // FIX: Provide the safe fallback to both center props
-      initialCenter={this.props.centerGPS || safeCenter}
-      /* Dynamic re-centering: uses click recenter if active, otherwise uses updated GPS */
-      center={this.state.recenterGPS || this.props.centerGPS}
+      initialCenter={this.getSafeCenter()} 
+      center={this.getSafeCenter()}
       onClick={this.onMapClick}
       >
         {this.props.reports.map((r, index) => {

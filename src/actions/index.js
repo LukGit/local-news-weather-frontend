@@ -32,3 +32,9 @@ export const addWaterReport = w_reports => {
 export const addNWSReport = nws_reports => {
   return { type: 'ADD_NWS_REPORT', nws_reports };
 };
+export const addHistoryReport = (reports) => {
+  return {
+    type: 'ADD_HISTORY_REPORT',
+    reports
+  }
+}

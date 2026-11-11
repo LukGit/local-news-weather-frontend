@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Navbar from './Navbar';
 import MapCaneReports from './MapCaneReports'
-import { addCaneReport } from '../actions'
-import { Label, Icon, Menu, Checkbox, Modal, Button, Item, Popup } from 'semantic-ui-react/dist/commonjs'
+import { addCaneReport, addHistoryReport } from '../actions'
+import { Label, Icon, Menu, Checkbox, Modal, Button, Item, Popup, Dropdown } from 'semantic-ui-react/dist/commonjs'
 
 class CaneReports extends Component {
   state = {
@@ -21,8 +21,79 @@ class CaneReports extends Component {
     futureTracks: {},
     conePolygons: {},
     isLoading: false, // NEW
-    lastUpdated: null // NEW
+    lastUpdated: null, // NEW
+    historyIsLoading: false, //New for storm history
+    selectedBasin: null, //New for storm history
+    allHistoryStorms: [] //New to add all storm history
   } 
+
+  fetchHistoryData = (basinCode) => {
+    this.setState({ historyIsLoading: true, selectedBasin: basinCode });
+
+    // Define the center of each ocean basin
+    const basinCenters = {
+      NA: { lat: 28.0, lng: -65.0 },
+      EP: { lat: 17.0, lng: -110.0 },
+      WP: { lat: 20.0, lng: 135.0 }
+    };
+
+    // === 1. FRONTEND CACHE GUARD ===
+    if (this.state.allHistoryStorms && this.state.allHistoryStorms.length > 0) {
+      console.log("⚡ USING FRONTEND CACHE. NO SERVER CALL MADE.");
+      
+      // Filter from our saved master list instead of hitting the server
+      const basinStorms = this.state.allHistoryStorms.filter(s => s.basin === basinCode);
+      this.props.addHistoryReport(basinStorms);
+      
+      this.setState({ 
+        historyIsLoading: false,
+        tempHistoryCenter: basinCenters[basinCode] 
+      });
+      return; // Exit completely to protect the NOAA connection
+    }
+
+    // === 2. INITIAL FETCH ===
+    console.log("📡 CACHE EMPTY. FETCHING FROM VERCEL...");
+    fetch("/api/history/storms")
+      .then(res => res.ok ? res.json() : { historyStorms: [] })
+      .then(data => {
+        if (!this._isMounted) return; 
+
+        console.log("HISTORY FETCH RESULT:", data);
+
+        const allStorms = data.historyStorms || [];
+        const basinStorms = allStorms.filter(s => s.basin === basinCode);
+        
+        this.props.addHistoryReport(basinStorms);
+        
+        this.setState({ 
+          allHistoryStorms: allStorms, // <-- Save the master list to state for next time!
+          historyIsLoading: false,
+          tempHistoryCenter: basinCenters[basinCode] 
+        });
+      })
+      .catch(err => {
+        console.error("History Fetch Error:", err);
+        if (this._isMounted) this.setState({ historyIsLoading: false });
+      });
+  }
+
+  handleBasinSelect = (e, { value }) => {
+    if (value === 'ACTIVE') {
+      // Clear historical reports from Redux to trigger the 'showActive' flag
+      this.props.addHistoryReport([]);
+      
+      // Reset local state and clear the temporary map center
+      this.setState({ 
+        selectedBasin: 'ACTIVE',
+        tempHistoryCenter: null 
+      });
+      return; 
+    }
+
+    // Otherwise, fetch/filter the historical basin
+    this.fetchHistoryData(value);
+  }
 
   getLayerNumFromStormId = (stormId, type) => {
     const basin = stormId.substring(0, 2).toUpperCase();
@@ -298,7 +369,8 @@ render() {
           </Menu.Item>
           {this.props.c_reports.length > 0 ?
           <Menu.Item>
-            <Popup content='Show only hurricanes and tropical storms' trigger={<Checkbox 
+            <Popup content='Show only hurricanes and tropical storms' trigger={
+            <Checkbox 
                 toggle
                 checked={this.state.htsOnly}
                 label={{ children: 'Hurricanes/Tropical Storms Only', style: { color: 'white' } }}
@@ -349,6 +421,26 @@ render() {
               </Item.Group>
             </Modal.Content>
           </Modal>
+          <Menu.Item>
+            <Dropdown 
+              button
+              style={{ cursor: 'pointer' }}
+              className='icon'
+              floating
+              labeled
+              title='Review storms from past 12 months'
+              icon='history'
+              options={[
+                { key: 'NA', text: 'North Atlantic Season', value: 'NA' },
+                { key: 'EP', text: 'Eastern Pacific Season', value: 'EP' },
+                { key: 'WP', text: 'Western Pacific Season', value: 'WP' },
+                { key: 'active', text: 'Return to Active Storms', value: 'ACTIVE' }
+              ]}
+              search
+              text={this.state.historyIsLoading ? 'Loading...' : 'Season Review'}
+              onChange={this.handleBasinSelect}
+            />
+          </Menu.Item>
           {/* NEW: Right-aligned wrapper for timestamp and weather button */}
           <Menu.Menu position='right'>
             {this.state.lastUpdated && (
@@ -363,7 +455,8 @@ render() {
         <div style={{ flex: 1, position: 'relative', width: '100%' }}>
         <MapCaneReports 
           c_reports={activeReports} 
-          gps={this.props.user.gps}
+          hist_reports={this.props.hist_reports} // Pass historical data to the map
+          gps={this.state.tempHistoryCenter || this.props.gps}
           pastTracks={filteredPastTracks}
           futureTracks={filteredFutureTracks}
           conePolygons={filteredConePolygons}
@@ -377,8 +470,9 @@ render() {
 const mapStateToProps = state => {
   return { 
     c_reports: state.c_reports,
+    hist_reports: state.hist_reports, // Mapped exactly to your rootReducer key
     user: state.users
    }
 }
 
-export default connect(mapStateToProps, { addCaneReport })(CaneReports)
+export default connect(mapStateToProps, { addCaneReport, addHistoryReport })(CaneReports)
