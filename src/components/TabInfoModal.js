@@ -35,7 +35,10 @@ const TAB_CONFIGS = {
     rules: [
       'Temporal Decay: Warning polygons and touchdown icons progressively fade in opacity over 24 hours.',
       'Auto-Zoom Polygons: Clicking a marker automatically zooms the map to frame active warning boundary shapes outlining impact zones.',
-      'Telemetry Popups: Selecting an icon displays localized touchdown times and damage assessments.'
+      'Telemetry Popups: Selecting an icon displays localized touchdown times and damage assessments.',
+      'Season Review (3M / 6M / 12M): Switch from live 24-hour warnings to a rolling 12-month national distribution of surveyed U.S. tornadoes color-coded by Enhanced Fujita (EF0–EF5) rating, with a one-click National View reset.',
+      'Local Swath Replay: Click any historical touchdown marker to inspect its survey summary, then select Replay Swath to frame the track and animate a true-scale, tapered damage swath across the terrain alongside same-day outbreak neighbors.',
+      'Data Attribution: Live tornado warnings and spotter touchdowns via NWS CAP Alerts and Iowa Environmental Mesonet (IEM); rolling 12-month surveyed tracks, path dimensions, and damage assessments via the NOAA / NWS Damage Assessment Toolkit (DAT).'
     ]
   },
   wildfire: {
